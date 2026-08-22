@@ -48,6 +48,8 @@ Route::middleware('auth')->group(function () {
 
     Route::middleware('can:manage assets')->group(function () {
         Volt::route('pola-spisowe', 'inventory-fields.index')->name('inventory-fields.index');
+        Volt::route('pola-spisowe/nowy', 'inventory-fields.form')->name('inventory-fields.create');
+        Volt::route('pola-spisowe/{inventoryField}/edytuj', 'inventory-fields.form')->name('inventory-fields.edit');
     });
 
     // User administration.
