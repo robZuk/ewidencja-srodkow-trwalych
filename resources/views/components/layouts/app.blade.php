@@ -38,12 +38,20 @@
                 <x-nav-link :href="route('assets.index')" :active="request()->routeIs('assets.*')" icon="squares-2x2">
                     Środki
                 </x-nav-link>
-                @php($pendingApprovals = auth()->check()
-                    ? \App\Models\TransferRequest::actionableBy(auth()->user())->count()
-                    : 0)
-                <x-nav-link :href="route('transfers.index')" :active="request()->routeIs('transfers.*')" icon="bell-alert" :badge="$pendingApprovals">
-                    Powiadomienia
-                </x-nav-link>
+                @php($transfersActive = request()->routeIs('transfers.*'))
+                <a
+                    href="{{ route('transfers.index') }}"
+                    wire:navigate
+                    @class([
+                        'flex items-center gap-3 rounded-lg px-3 py-2 font-medium transition',
+                        'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300' => $transfersActive,
+                        'text-zinc-600 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800' => ! $transfersActive,
+                    ])
+                >
+                    <flux:icon name="bell-alert" variant="outline" class="size-5 shrink-0" />
+                    <span>Powiadomienia</span>
+                    <livewire:notifications-badge />
+                </a>
                 @cannot('view inventory fields')
                     <x-nav-link :href="route('my-fields')" :active="request()->routeIs('my-fields')" icon="rectangle-stack">
                         Moje pola spisowe

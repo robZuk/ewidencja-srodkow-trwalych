@@ -28,6 +28,7 @@ new #[Layout('components.layouts.app', ['title' => 'Powiadomienia'])] class exte
             $acceptTransfer->handle($request, auth()->user());
         }
 
+        $this->dispatch('requests-updated');
         session()->flash('status', 'Zgłoszenie zostało zaakceptowane.');
     }
 
@@ -37,6 +38,7 @@ new #[Layout('components.layouts.app', ['title' => 'Powiadomienia'])] class exte
 
         $rejectRequest->handle($request, auth()->user());
 
+        $this->dispatch('requests-updated');
         session()->flash('status', 'Zgłoszenie zostało odrzucone.');
     }
 

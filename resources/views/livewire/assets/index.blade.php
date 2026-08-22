@@ -98,6 +98,7 @@ new #[Layout('components.layouts.app', ['title' => 'Środki'])] class extends Co
         $action->handle($asset, InventoryField::findOrFail($this->opsTargetFieldId), auth()->user(), $this->opsTransferNote ?: null);
 
         $this->dispatch('close-asset-ops');
+        $this->dispatch('requests-updated');
     }
 
     public function requestLiquidation(RequestLiquidation $action): void
@@ -115,6 +116,7 @@ new #[Layout('components.layouts.app', ['title' => 'Środki'])] class extends Co
         $action->handle($asset, auth()->user(), $this->opsLiquidationNote ?: null);
 
         $this->dispatch('close-asset-ops');
+        $this->dispatch('requests-updated');
     }
 
     /** @return array<string, mixed> */
