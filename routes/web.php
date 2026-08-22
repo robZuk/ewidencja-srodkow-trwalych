@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AssetExportController;
 use App\Http\Controllers\DrukController;
+use App\Http\Controllers\ImpersonationController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Livewire\Volt\Volt;
@@ -48,4 +49,15 @@ Route::middleware('auth')->group(function () {
     Route::middleware('can:manage assets')->group(function () {
         Volt::route('pola-spisowe', 'inventory-fields.index')->name('inventory-fields.index');
     });
+
+    // User administration.
+    Route::middleware('can:manage users')->group(function () {
+        Volt::route('uzytkownicy', 'users.index')->name('users.index');
+        Volt::route('uzytkownicy/nowy', 'users.form')->name('users.create');
+        Volt::route('uzytkownicy/{user}/edytuj', 'users.form')->name('users.edit');
+        Route::get('przejmij-sesje/{user}', [ImpersonationController::class, 'start'])->name('impersonate.start');
+    });
+
+    // Ending impersonation must be reachable as the impersonated user (any role).
+    Route::get('zakoncz-przejecie', [ImpersonationController::class, 'stop'])->name('impersonate.stop');
 });

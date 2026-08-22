@@ -30,6 +30,8 @@ Built with **Laravel 13 · Livewire 4 · Volt · Flux · Tailwind v4**, tested w
   replacing the legacy version's model-`boot()` side effects.
 - **Role-based access** — `admin`, `editor`, `inventory_section`, `viewer`
   (spatie/laravel-permission) enforced through Policies and a read-only **demo** account.
+- **User administration & impersonation** — admins manage accounts and roles and can
+  take over a user's session ("przejęcie sesji") with a persistent banner and one-click exit.
 - **Documents & export** — ZMU and liquidation **PDF** forms (dompdf), plus **CSV**
   and **Excel** export that honour the active list filters.
 - **Legacy importer** — an idempotent, chunked artisan command to migrate real data
@@ -151,7 +153,6 @@ can be added here once deployed).
 ## Roadmap (v2)
 
 - LDAP / SSO authentication
-- User impersonation for support
 - Full PL/EN interface localisation
 - Bulk asset operations and saved filters
 

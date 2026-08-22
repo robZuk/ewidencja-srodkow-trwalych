@@ -11,6 +11,16 @@
     @fluxAppearance
 </head>
 <body class="h-full bg-zinc-50 text-zinc-800 antialiased dark:bg-zinc-900 dark:text-zinc-200">
+    @if (session()->has('impersonator_id'))
+        <div class="flex items-center justify-center gap-3 bg-amber-500 px-4 py-2 text-sm font-medium text-amber-950">
+            <flux:icon.user-circle variant="micro" />
+            Działasz jako <strong>{{ auth()->user()?->name }}</strong> (przejęcie sesji).
+            <a href="{{ route('impersonate.stop') }}" class="underline underline-offset-2 hover:no-underline">
+                Zakończ przejęcie
+            </a>
+        </div>
+    @endif
+
     <div x-data="{ open: false }" class="min-h-full lg:flex">
         {{-- Sidebar --}}
         <aside
@@ -42,12 +52,19 @@
                     </x-nav-link>
                 @endcan
 
-                @can('manage assets')
+                @canany(['manage assets', 'manage users'])
                     <div class="mt-4 px-3 text-xs font-semibold uppercase tracking-wider text-zinc-400">Administracja</div>
-                    <x-nav-link :href="route('inventory-fields.index')" :active="request()->routeIs('inventory-fields.*')" icon="rectangle-stack">
-                        Pola Spisowe
-                    </x-nav-link>
-                @endcan
+                    @can('manage assets')
+                        <x-nav-link :href="route('inventory-fields.index')" :active="request()->routeIs('inventory-fields.*')" icon="rectangle-stack">
+                            Pola Spisowe
+                        </x-nav-link>
+                    @endcan
+                    @can('manage users')
+                        <x-nav-link :href="route('users.index')" :active="request()->routeIs('users.*')" icon="users">
+                            Użytkownicy
+                        </x-nav-link>
+                    @endcan
+                @endcanany
             </nav>
         </aside>
 

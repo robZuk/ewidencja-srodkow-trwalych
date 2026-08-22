@@ -17,6 +17,7 @@ class RolePermissionSeeder extends Seeder
         'manage assets',      // create / update / delete
         'request transfers',  // initiate a transfer or liquidation
         'decide transfers',   // accept/reject as target field or inventory section
+        'manage users',       // user administration + impersonation
     ];
 
     /** @var array<string, list<string>> */
