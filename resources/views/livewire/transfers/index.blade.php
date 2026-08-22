@@ -5,6 +5,7 @@ use App\Actions\Transfers\AcceptTransfer;
 use App\Actions\Transfers\RejectRequest;
 use App\Actions\Transfers\RequestLiquidation;
 use App\Actions\Transfers\RequestTransfer;
+use App\Enums\TransferStatus;
 use App\Enums\TransferType;
 use App\Models\Asset;
 use App\Models\InventoryField;
@@ -60,7 +61,11 @@ new #[Layout('components.layouts.app', ['title' => 'Powiadomienia'])] class exte
 
     public function accept(TransferRequest $request, AcceptTransfer $acceptTransfer, AcceptLiquidation $acceptLiquidation): void
     {
-        $this->authorize('decide', $request);
+        // Step 1 (Pending) is the target field's call; step 2 the inventory section's.
+        $this->authorize(
+            $request->status === TransferStatus::Pending ? 'acceptTarget' : 'acceptInventory',
+            $request,
+        );
 
         if ($request->type === TransferType::Liquidation) {
             $acceptLiquidation->handle($request, auth()->user());
@@ -73,7 +78,7 @@ new #[Layout('components.layouts.app', ['title' => 'Powiadomienia'])] class exte
 
     public function reject(TransferRequest $request, RejectRequest $rejectRequest): void
     {
-        $this->authorize('decide', $request);
+        $this->authorize('reject', $request);
 
         $rejectRequest->handle($request, auth()->user());
 
@@ -90,7 +95,6 @@ new #[Layout('components.layouts.app', ['title' => 'Powiadomienia'])] class exte
                 ->paginate(15),
             'assets' => Asset::query()->where('status', 'available')->orderBy('name')->get(),
             'fields' => InventoryField::query()->orderBy('code')->get(),
-            'canDecide' => auth()->user()?->can('decide transfers') ?? false,
             'canRequest' => auth()->user()?->can('request transfers') ?? false,
         ];
     }
@@ -165,8 +169,12 @@ new #[Layout('components.layouts.app', ['title' => 'Powiadomienia'])] class exte
                             <flux:badge :color="$request->status->color()" size="sm">{{ $request->status->label() }}</flux:badge>
                         </td>
                         <td class="px-4 py-3">
+                            @php($canAct = $request->status->isOpen() && auth()->user()->can(
+                                $request->status === App\Enums\TransferStatus::Pending ? 'acceptTarget' : 'acceptInventory',
+                                $request,
+                            ))
                             <div class="flex items-center justify-end gap-1">
-                                @if ($canDecide && $request->status->isOpen())
+                                @if ($canAct)
                                     <flux:button wire:click="accept({{ $request->id }})" size="xs" variant="primary" icon="check">Akceptuj</flux:button>
                                     <flux:button wire:click="reject({{ $request->id }})" wire:confirm="Odrzucić zgłoszenie?" size="xs" variant="subtle" icon="x-mark" />
                                 @else

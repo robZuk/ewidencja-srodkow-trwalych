@@ -94,15 +94,25 @@ class DemoSeeder extends Seeder
     {
         $requester = User::where('email', 'editor@example.com')->first();
 
-        // A pending transfer between two fields.
-        $asset = Asset::query()->where('status', 'available')->inRandomOrder()->first();
+        // The editor is a member of a few fields so they can accept incoming
+        // transfers targeted at those fields (step 1 of the two-role approval).
+        $requester?->inventoryFields()->sync($fields->take(4)->pluck('id')->all());
+
+        // A pending transfer whose target is a field the editor belongs to.
+        $targetField = $fields->first();
+        $asset = Asset::query()
+            ->where('status', 'available')
+            ->where('inventory_field_id', '!=', $targetField->id)
+            ->inRandomOrder()
+            ->first();
+
         if ($asset !== null) {
             TransferRequest::create([
                 'type' => TransferType::Transfer,
                 'status' => TransferStatus::Pending,
                 'asset_id' => $asset->id,
                 'source_field_id' => $asset->inventory_field_id,
-                'target_field_id' => $fields->where('id', '!=', $asset->inventory_field_id)->random()->id,
+                'target_field_id' => $targetField->id,
                 'requested_by' => $requester?->id,
                 'note' => 'Przeniesienie do nowej jednostki organizacyjnej.',
             ]);

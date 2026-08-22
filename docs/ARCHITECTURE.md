@@ -42,6 +42,12 @@ Liquidation: PendingInventory ──▶ Completed
 Transitions live in the Action classes; asset side effects (moving an asset to the
 target field, or marking it liquidated with a date) run inside a DB transaction.
 
+**Separation of duties.** The two acceptance steps are performed by different roles:
+step 1 (`acceptTarget`) is authorized only for a **member of the target field**
+(`inventory_field_user` pivot) — the recipient who accepts the incoming asset — while
+step 2 (`acceptInventory`) is reserved for the **inventory section**. An asset is also
+**locked** (no edit/delete, no second request) while it has any open request.
+
 ## What changed versus the legacy system
 
 | Legacy | This rebuild | Why |

@@ -28,6 +28,9 @@ class UserForm extends Form
 
     public string $password = '';
 
+    /** @var list<int> inventory field ids the user belongs to */
+    public array $fieldIds = [];
+
     /** @return array<string, mixed> */
     public function rules(): array
     {
@@ -36,6 +39,8 @@ class UserForm extends Form
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($this->user?->id)],
             'role' => ['required', Rule::in(array_keys(self::ROLES))],
             'password' => [$this->user ? 'nullable' : 'required', 'string', 'min:8'],
+            'fieldIds' => ['array'],
+            'fieldIds.*' => [Rule::exists('inventory_fields', 'id')],
         ];
     }
 
@@ -56,6 +61,7 @@ class UserForm extends Form
         $this->name = $user->name;
         $this->email = $user->email;
         $this->role = $user->getRoleNames()->first() ?? 'viewer';
+        $this->fieldIds = $user->inventoryFields()->pluck('inventory_fields.id')->all();
     }
 
     public function store(): User
@@ -70,6 +76,7 @@ class UserForm extends Form
         ]);
 
         $user->syncRoles([$this->role]);
+        $user->inventoryFields()->sync($this->fieldIds);
 
         return $user;
     }
@@ -85,5 +92,6 @@ class UserForm extends Form
         ], fn ($value) => $value !== null));
 
         $this->user?->syncRoles([$this->role]);
+        $this->user?->inventoryFields()->sync($this->fieldIds);
     }
 }

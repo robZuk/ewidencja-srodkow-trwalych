@@ -1,6 +1,7 @@
 <?php
 
 use App\Livewire\Forms\UserForm;
+use App\Models\InventoryField;
 use App\Models\User;
 use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
@@ -38,7 +39,10 @@ new #[Layout('components.layouts.app', ['title' => 'Użytkownik'])] class extend
     /** @return array<string, mixed> */
     public function with(): array
     {
-        return ['roles' => UserForm::ROLES];
+        return [
+            'roles' => UserForm::ROLES,
+            'fields' => InventoryField::query()->orderBy('code')->get(),
+        ];
     }
 }; ?>
 
@@ -67,6 +71,16 @@ new #[Layout('components.layouts.app', ['title' => 'Użytkownik'])] class extend
                 :required="! $editing"
                 viewable
             />
+
+            <div class="sm:col-span-2">
+                <flux:checkbox.group wire:model="form.fieldIds" label="Pola spisowe użytkownika" description="Użytkownik akceptuje przekazania kierowane do wybranych pól.">
+                    <div class="grid gap-2 sm:grid-cols-2">
+                        @foreach ($fields as $field)
+                            <flux:checkbox value="{{ $field->id }}" label="{{ $field->label() }}" />
+                        @endforeach
+                    </div>
+                </flux:checkbox.group>
+            </div>
         </div>
 
         <div class="flex items-center gap-3">
