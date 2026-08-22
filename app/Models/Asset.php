@@ -14,7 +14,26 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property int $id
+ * @property string $inventory_number
+ * @property string $name
+ * @property string|null $description
+ * @property string|null $purchase_doc_number
+ * @property numeric-string $value
+ * @property Carbon|null $purchase_date
+ * @property Carbon|null $liquidation_date
+ * @property int $quantity
+ * @property string|null $asset_type
+ * @property int|null $location_id
+ * @property int $inventory_field_id
+ * @property AssetStatus $status
+ * @property string|null $comment
+ * @property-read InventoryField|null $inventoryField
+ * @property-read Location|null $location
+ */
 #[ObservedBy(AssetObserver::class)]
 class Asset extends Model
 {
