@@ -57,9 +57,11 @@ new #[Layout('components.layouts.app', ['title' => 'Pola Spisowe'])] class exten
             <flux:heading size="xl">Pola spisowe</flux:heading>
             <flux:subheading>Jednostki organizacyjne, do których przypisane są środki.</flux:subheading>
         </div>
-        <flux:button :href="route('inventory-fields.create')" variant="primary" icon="plus" wire:navigate>
-            Dodaj pole
-        </flux:button>
+        @can('create', App\Models\InventoryField::class)
+            <flux:button :href="route('inventory-fields.create')" variant="primary" icon="plus" wire:navigate>
+                Dodaj pole
+            </flux:button>
+        @endcan
     </div>
 
     <flux:input wire:model.live.debounce.300ms="search" icon="magnifying-glass" placeholder="Szukaj: kod lub nazwa…" class="mb-4 max-w-md" />
@@ -84,13 +86,17 @@ new #[Layout('components.layouts.app', ['title' => 'Pola Spisowe'])] class exten
                         <td class="px-4 py-3 text-right tabular-nums">{{ $field->members_count }}</td>
                         <td class="px-4 py-3">
                             <div class="flex items-center justify-end gap-1">
-                                <flux:button :href="route('inventory-fields.edit', $field)" size="xs" variant="subtle" icon="pencil-square" wire:navigate />
-                                @can('delete', $field)
-                                    <flux:button wire:click="delete({{ $field->id }})" wire:confirm="Usunąć to pole spisowe?" size="xs" variant="subtle" icon="trash" />
+                                @can('update', $field)
+                                    <flux:button :href="route('inventory-fields.edit', $field)" size="xs" variant="subtle" icon="pencil-square" wire:navigate />
+                                    @can('delete', $field)
+                                        <flux:button wire:click="delete({{ $field->id }})" wire:confirm="Usunąć to pole spisowe?" size="xs" variant="subtle" icon="trash" />
+                                    @else
+                                        <flux:tooltip content="Nie można usunąć — pole ma przypisane środki">
+                                            <flux:button size="xs" variant="subtle" icon="trash" disabled />
+                                        </flux:tooltip>
+                                    @endcan
                                 @else
-                                    <flux:tooltip content="Nie można usunąć — pole ma przypisane środki">
-                                        <flux:button size="xs" variant="subtle" icon="trash" disabled />
-                                    </flux:tooltip>
+                                    <span class="text-xs text-zinc-400">—</span>
                                 @endcan
                             </div>
                         </td>

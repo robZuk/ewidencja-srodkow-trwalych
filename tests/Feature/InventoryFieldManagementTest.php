@@ -21,10 +21,24 @@ it('lists inventory fields for an admin', function () {
     Volt::test('inventory-fields.index')->assertSee('Dziekanat');
 });
 
-it('forbids non-admins from managing fields', function (string $role) {
+it('lets the inventory section view the field list', function () {
+    InventoryField::factory()->create(['name' => 'Rektorat']);
+
+    actingAs(User::factory()->create()->assignRole('inventory_section'));
+
+    Volt::test('inventory-fields.index')->assertSee('Rektorat');
+});
+
+it('forbids editors and viewers from the field list', function (string $role) {
     actingAs(User::factory()->create()->assignRole($role));
 
     Volt::test('inventory-fields.index')->assertForbidden();
+})->with(['editor', 'viewer']);
+
+it('forbids non-admins from opening the field form', function (string $role) {
+    actingAs(User::factory()->create()->assignRole($role));
+
+    Volt::test('inventory-fields.form')->assertForbidden();
 })->with(['editor', 'inventory_section', 'viewer']);
 
 it('creates an inventory field', function () {

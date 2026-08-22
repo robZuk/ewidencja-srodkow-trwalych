@@ -18,6 +18,7 @@ class RolePermissionSeeder extends Seeder
         'request transfers',        // initiate a transfer or liquidation
         'decide transfers',         // accept/reject as target field or inventory section
         'manage users',             // user administration + impersonation
+        'view inventory fields',    // read the full list of pola spisowe
         'manage inventory fields',  // create/edit/delete pola spisowe (admin only)
     ];
 
@@ -25,7 +26,7 @@ class RolePermissionSeeder extends Seeder
     private const ROLES = [
         'admin' => self::PERMISSIONS,
         'editor' => ['view assets', 'manage assets', 'request transfers'],
-        'inventory_section' => ['view assets', 'request transfers', 'decide transfers'],
+        'inventory_section' => ['view assets', 'request transfers', 'decide transfers', 'view inventory fields'],
         'viewer' => ['view assets'],
     ];
 

@@ -49,9 +49,13 @@ Route::middleware('auth')->group(function () {
     // Read-only view of the fields the current user belongs to.
     Volt::route('moje-pola-spisowe', 'inventory-fields.mine')->name('my-fields');
 
-    // Inventory field administration — admins only.
-    Route::middleware('can:manage inventory fields')->group(function () {
+    // The full field list — admins and the inventory section (read-only for the latter).
+    Route::middleware('can:view inventory fields')->group(function () {
         Volt::route('pola-spisowe', 'inventory-fields.index')->name('inventory-fields.index');
+    });
+
+    // Field administration (create/edit/delete) — admins only.
+    Route::middleware('can:manage inventory fields')->group(function () {
         Volt::route('pola-spisowe/nowy', 'inventory-fields.form')->name('inventory-fields.create');
         Volt::route('pola-spisowe/{inventoryField}/edytuj', 'inventory-fields.form')->name('inventory-fields.edit');
     });

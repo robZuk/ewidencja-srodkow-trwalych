@@ -11,7 +11,7 @@ class InventoryFieldPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->can('manage inventory fields');
+        return $user->can('view inventory fields');
     }
 
     public function create(User $user): bool
