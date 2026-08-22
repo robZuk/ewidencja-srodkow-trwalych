@@ -1,0 +1,40 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    # Run as the host user so files created in the mounted volume stay editable.
+    # Override with `UID=$(id -u) GID=$(id -g) docker compose up` if not 1000.
+    user: "${UID:-1000}:${GID:-1000}"
+    ports:
+      - "8000:8000"   # Laravel dev server
+      - "5173:5173"   # Vite dev server (HMR)
+    volumes:
+      - .:/var/www/html
+    environment:
+      HOME: /tmp
+    depends_on:
+      mysql:
+        condition: service_healthy
+    restart: unless-stopped
+
+  mysql:
+    image: mysql:8.0
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: asset_inventory
+      MYSQL_USER: app
+      MYSQL_PASSWORD: secret
+      MYSQL_ROOT_PASSWORD: root
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
