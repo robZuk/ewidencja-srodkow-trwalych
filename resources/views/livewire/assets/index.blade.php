@@ -1,8 +1,11 @@
 <?php
 
+use App\Actions\Transfers\RequestLiquidation;
+use App\Actions\Transfers\RequestTransfer;
 use App\Enums\AssetStatus;
 use App\Models\Asset;
 use App\Models\InventoryField;
+use App\Models\TransferRequest;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
 use Livewire\Volt\Component;
@@ -29,6 +32,15 @@ new #[Layout('components.layouts.app', ['title' => 'Środki'])] class extends Co
 
     #[Url]
     public string $direction = 'asc';
+
+    // Quick "operacje na środku" modal (transfer / liquidation) launched from a row.
+    public ?int $opsAssetId = null;
+
+    public ?int $opsTargetFieldId = null;
+
+    public string $opsTransferNote = '';
+
+    public string $opsLiquidationNote = '';
 
     public function updated(string $property): void
     {
@@ -60,6 +72,51 @@ new #[Layout('components.layouts.app', ['title' => 'Środki'])] class extends Co
         session()->flash('status', "Środek „{$asset->name}” został usunięty.");
     }
 
+    public function requestTransfer(RequestTransfer $action): void
+    {
+        $this->authorize('create', TransferRequest::class);
+
+        $asset = Asset::findOrFail($this->opsAssetId);
+
+        $this->validate(
+            ['opsTargetFieldId' => ['required', 'exists:inventory_fields,id']],
+            attributes: ['opsTargetFieldId' => 'pole docelowe'],
+        );
+
+        if ($asset->isLockedForEditing()) {
+            $this->addError('opsTargetFieldId', 'Ten środek ma już otwarte zgłoszenie.');
+
+            return;
+        }
+
+        if ((int) $this->opsTargetFieldId === (int) $asset->inventory_field_id) {
+            $this->addError('opsTargetFieldId', 'Pole docelowe musi być inne niż obecne pole środka.');
+
+            return;
+        }
+
+        $action->handle($asset, InventoryField::findOrFail($this->opsTargetFieldId), auth()->user(), $this->opsTransferNote ?: null);
+
+        $this->dispatch('close-asset-ops');
+    }
+
+    public function requestLiquidation(RequestLiquidation $action): void
+    {
+        $this->authorize('create', TransferRequest::class);
+
+        $asset = Asset::findOrFail($this->opsAssetId);
+
+        if ($asset->isLockedForEditing()) {
+            $this->addError('opsLiquidationNote', 'Ten środek ma już otwarte zgłoszenie.');
+
+            return;
+        }
+
+        $action->handle($asset, auth()->user(), $this->opsLiquidationNote ?: null);
+
+        $this->dispatch('close-asset-ops');
+    }
+
     /** @return array<string, mixed> */
     public function with(): array
     {
@@ -76,6 +133,7 @@ new #[Layout('components.layouts.app', ['title' => 'Środki'])] class extends Co
                 ->paginate(15),
             'fields' => InventoryField::query()->orderBy('code')->get(),
             'statuses' => AssetStatus::cases(),
+            'opsAsset' => $this->opsAssetId !== null ? Asset::find($this->opsAssetId) : null,
         ];
     }
 }; ?>
@@ -153,6 +211,17 @@ new #[Layout('components.layouts.app', ['title' => 'Środki'])] class extends Co
                         <td class="px-4 py-3">
                             <div class="flex items-center justify-end gap-1">
                                 <flux:button :href="route('assets.history', $asset)" size="xs" variant="subtle" icon="clock" wire:navigate />
+                                @can('create', App\Models\TransferRequest::class)
+                                    @if ($asset->open_transfers_count === 0)
+                                        <flux:button
+                                            x-on:click="$wire.set('opsAssetId', {{ $asset->id }}, false); window.Flux.modal('asset-ops').show()"
+                                            size="xs"
+                                            variant="subtle"
+                                            icon="arrows-right-left"
+                                            title="Przekaż / zlikwiduj"
+                                        />
+                                    @endif
+                                @endcan
                                 @can('manage assets')
                                     @if ($asset->open_transfers_count > 0)
                                         <flux:badge color="amber" size="sm" icon="lock-closed">W akceptacji</flux:badge>
@@ -184,4 +253,58 @@ new #[Layout('components.layouts.app', ['title' => 'Środki'])] class extends Co
     <div class="mt-4">
         {{ $assets->links() }}
     </div>
+
+    {{-- Quick operations: start a transfer or liquidation straight from the list. --}}
+    <flux:modal
+        name="asset-ops"
+        class="max-w-lg"
+        x-on:close-asset-ops.window="window.Flux.modal('asset-ops').close()"
+    >
+        <div class="space-y-6">
+            <div>
+                <flux:heading size="lg">Operacje na środku</flux:heading>
+                @if ($opsAsset)
+                    <flux:subheading>{{ $opsAsset->inventory_number }} · {{ $opsAsset->name }} ({{ $opsAsset->inventoryField?->label() }})</flux:subheading>
+                @endif
+            </div>
+
+            {{-- Transfer --}}
+            <div class="space-y-3">
+                <div class="flex items-center gap-2 font-medium">
+                    <flux:icon.arrow-right-circle variant="micro" /> Przekaż do innego pola
+                </div>
+                <flux:select wire:model="opsTargetFieldId" label="Pole docelowe">
+                    <flux:select.option value="">— wybierz —</flux:select.option>
+                    @foreach ($fields as $field)
+                        @if (! $opsAsset || $field->id !== $opsAsset->inventory_field_id)
+                            <flux:select.option value="{{ $field->id }}">{{ $field->label() }}</flux:select.option>
+                        @endif
+                    @endforeach
+                </flux:select>
+                <flux:input wire:model="opsTransferNote" label="Notatka" placeholder="opcjonalnie" />
+                <flux:button wire:click="requestTransfer" variant="primary" icon="paper-airplane" class="self-start">
+                    Utwórz przekazanie
+                </flux:button>
+            </div>
+
+            <flux:separator />
+
+            {{-- Liquidation --}}
+            <div class="space-y-3">
+                <div class="flex items-center gap-2 font-medium">
+                    <flux:icon.trash variant="micro" /> Zgłoś do likwidacji
+                </div>
+                <flux:textarea wire:model="opsLiquidationNote" label="Uzasadnienie" rows="2" placeholder="np. sprzęt uszkodzony" />
+                <flux:button
+                    wire:click="requestLiquidation"
+                    wire:confirm="Utworzyć wniosek o likwidację tego środka?"
+                    variant="danger"
+                    icon="trash"
+                    class="self-start"
+                >
+                    Wniosek o likwidację
+                </flux:button>
+            </div>
+        </div>
+    </flux:modal>
 </div>

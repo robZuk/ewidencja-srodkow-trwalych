@@ -2,6 +2,7 @@
 
 use App\Models\Asset;
 use App\Models\InventoryField;
+use App\Models\TransferRequest;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
 use Livewire\Volt\Volt;
@@ -87,4 +88,21 @@ it('forbids a viewer from creating an asset', function () {
     actingAs(viewer());
 
     Volt::test('assets.form')->assertForbidden();
+});
+
+it('starts a transfer straight from the assets list', function () {
+    $target = InventoryField::factory()->create();
+    $asset = Asset::factory()->create();
+
+    actingAs(editor());
+
+    Volt::test('assets.index')
+        ->set('opsAssetId', $asset->id)
+        ->set('opsTargetFieldId', $target->id)
+        ->call('requestTransfer')
+        ->assertHasNoErrors()
+        ->assertDispatched('close-asset-ops');
+
+    expect(TransferRequest::where('asset_id', $asset->id)->count())->toBe(1)
+        ->and($asset->refresh()->isLockedForEditing())->toBeTrue();
 });

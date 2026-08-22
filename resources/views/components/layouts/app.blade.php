@@ -108,6 +108,7 @@
         </div>
     </div>
 
+    <flux:toast position="top right" />
     @fluxScripts
 </body>
 </html>
