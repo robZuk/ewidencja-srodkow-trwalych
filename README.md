@@ -1,58 +1,161 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Asset Inventory
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+> A fixed-asset inventory and transfer-workflow system for an organisation — assets
+> (*środki trwałe*), inventory fields (*pola spisowe*), a three-step transfer &
+> liquidation approval flow, an audit trail, printable PDF forms and CSV/Excel export.
 
-## About Laravel
+Built with **Laravel 13 · Livewire 4 · Volt · Flux · Tailwind v4**, tested with
+**Pest**, statically analysed with **Larastan**, and runnable with a single
+`docker compose up`.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+> The domain is a rebuild of a real institutional asset-management application; this
+> version is a clean, portfolio-focused reimplementation with a normalised schema,
+> a service/action layer, policy-based authorization and full test coverage. The UI
+> is in Polish (the domain language); the code, commits and docs are in English.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+<!-- Replace <user> with your GitHub path once pushed. -->
+![CI](https://github.com/<user>/asset-inventory/actions/workflows/ci.yml/badge.svg)
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+---
 
-## Learning Laravel
+## Highlights
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+- **Assets CRUD** — searchable, filterable, sortable, paginated list; create/edit
+  form with server-side validation; per-asset audit history.
+- **Three-step transfer workflow** — an editor requests a transfer, the target field
+  accepts, the inventory section confirms and the asset is moved — modelled as an
+  explicit status state machine backed by dedicated Action classes.
+- **Liquidation workflow** — request → inventory approval → asset marked liquidated.
+- **Audit trail** — every asset change is recorded by an observer (append-only),
+  replacing the legacy version's model-`boot()` side effects.
+- **Role-based access** — `admin`, `editor`, `inventory_section`, `viewer`
+  (spatie/laravel-permission) enforced through Policies and a read-only **demo** account.
+- **Documents & export** — ZMU and liquidation **PDF** forms (dompdf), plus **CSV**
+  and **Excel** export that honour the active list filters.
+- **Legacy importer** — an idempotent, chunked artisan command to migrate real data
+  from the old database schema into the new one.
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## Tech stack
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+| Layer | Choice |
+|---|---|
+| Backend | Laravel 13, PHP 8.4 |
+| UI | Livewire 4 + Volt (SFCs) + Flux, Tailwind CSS v4 |
+| Auth / RBAC | Laravel auth + spatie/laravel-permission |
+| PDF / Spreadsheets | barryvdh/laravel-dompdf, phpoffice/phpspreadsheet |
+| Testing / QA | Pest 4, Larastan (level 6), Laravel Pint |
+| Tooling | Docker (PHP 8.4 + Node 22 + MySQL 8), GitHub Actions |
 
-## Agentic Development
+## Architecture
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
-
-```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+```
+Livewire/Volt components   UI + interaction (thin — no business logic)
+        │
+        ├─ Livewire Form objects        validation + binding (AssetForm)
+        ├─ Action classes               domain operations (App\Actions\Transfers\*)
+        ▼
+Eloquent models + query scopes         search()/forField()/withStatus(), enums
+        │
+        ├─ Policies + spatie/permission authorization (no magic role IDs)
+        └─ AssetObserver                append-only audit trail
+Thin controllers                       file endpoints only (PDF, CSV/XLSX)
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+Key decisions and how they differ from the legacy system are documented in
+[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
-## Contributing
+## Domain model
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+- **Asset** (`assets`) — auto-increment PK, `unique(inventory_number, inventory_field_id)`,
+  soft deletes, `status` enum (`available` / `transferred` / `liquidated`).
+- **InventoryField** (`inventory_fields`) — the *pola spisowe* (a first-class table,
+  not the misused `roles` table of the legacy schema).
+- **Location** (`locations`), **TransferRequest** (`transfer_requests`, with `type`
+  and `status` enums), **AssetActivity** (`asset_activities`, the audit log).
 
-## Code of Conduct
+## Getting started
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Requires Docker. From a fresh clone:
 
-## Security Vulnerabilities
+```bash
+docker compose up
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+The entrypoint is idempotent: it creates `.env`, installs dependencies, waits for
+MySQL, runs migrations and seeds demo data, then serves the app.
 
-## License
+- App: <http://localhost:8000>
+- Vite dev server: <http://localhost:5173>
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+> If your host user isn't UID 1000, start with
+> `UID=$(id -u) GID=$(id -g) docker compose up`.
+
+### Demo accounts
+
+All passwords are `password`.
+
+| Email | Role | Can |
+|---|---|---|
+| `admin@example.com` | admin | everything |
+| `editor@example.com` | editor | manage assets, request transfers |
+| `inwentaryzacja@example.com` | inventory_section | decide transfers, generate druki |
+| `demo@example.com` | viewer | read-only (recruiter-friendly) |
+
+## Testing & quality
+
+```bash
+docker compose exec app composer check   # Pint (style) + Larastan + Pest
+# or individually:
+docker compose exec app ./vendor/bin/pest
+docker compose exec app ./vendor/bin/pint --test
+docker compose exec app ./vendor/bin/phpstan analyse --memory-limit=1G
+```
+
+Tests run on an in-memory SQLite database; CI (GitHub Actions) runs the same gate
+plus a production asset build on every push and pull request.
+
+## Importing legacy data
+
+The app ships with generated demo data. To import from the **old** database instead,
+point the `legacy` connection at it and run the importer:
+
+```dotenv
+# .env
+LEGACY_DB_HOST=...
+LEGACY_DB_DATABASE=eki
+LEGACY_DB_USERNAME=...
+LEGACY_DB_PASSWORD=...
+```
+
+```bash
+docker compose exec app php artisan app:import-legacy --dry-run   # preview counts
+docker compose exec app php artisan app:import-legacy --fresh     # import (truncates first)
+```
+
+The command is chunked and idempotent, and maps the old schema onto the new one
+(`roles`→`inventory_fields`, `zasoby`→`assets`, `powiadomienia`→`transfer_requests`,
+etc.). It was verified end-to-end against a real ~20 000-asset dump.
+
+## Screenshots
+
+Screens: login (with one-click demo prefill), the assets list (search/filter/sort),
+the asset form, the notifications/approval board, and the ZMU/liquidation *druki*.
+Drop captures into `docs/screenshots/` to display them here.
+
+## Deployment
+
+The app is a standard Laravel + MySQL stack and deploys to any Docker host. See
+[`docs/DEPLOY.md`](docs/DEPLOY.md) for a Railway/Fly.io walkthrough (a live demo URL
+can be added here once deployed).
+
+## Roadmap (v2)
+
+- LDAP / SSO authentication
+- User impersonation for support
+- Full PL/EN interface localisation
+- Bulk asset operations and saved filters
+
+## Notes
+
+Portfolio project. Demo data is generated with factories; any resemblance to real
+records is coincidental. MIT-licensed.
