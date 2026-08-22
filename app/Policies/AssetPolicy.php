@@ -26,11 +26,11 @@ class AssetPolicy
 
     public function update(User $user, Asset $asset): bool
     {
-        return $user->can('manage assets');
+        return $user->can('manage assets') && ! $asset->isLockedForEditing();
     }
 
     public function delete(User $user, Asset $asset): bool
     {
-        return $user->can('manage assets');
+        return $user->can('manage assets') && ! $asset->isLockedForEditing();
     }
 }

@@ -94,6 +94,15 @@ class Asset extends Model
         return $this->hasMany(TransferRequest::class);
     }
 
+    /**
+     * An asset is locked while it has an open (unresolved) transfer or liquidation
+     * request — it must not be edited or deleted until the request is settled.
+     */
+    public function isLockedForEditing(): bool
+    {
+        return $this->transferRequests()->open()->exists();
+    }
+
     // -- Query scopes --------------------------------------------------------
 
     /**

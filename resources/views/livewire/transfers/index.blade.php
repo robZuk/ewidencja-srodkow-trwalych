@@ -37,6 +37,13 @@ new #[Layout('components.layouts.app', ['title' => 'Powiadomienia'])] class exte
         ]);
 
         $asset = Asset::findOrFail($this->assetId);
+
+        if ($asset->isLockedForEditing()) {
+            $this->addError('assetId', 'Ten środek ma już otwarte zgłoszenie w toku.');
+
+            return;
+        }
+
         $user = auth()->user();
 
         if ($this->type === 'transfer') {

@@ -17,6 +17,13 @@ new #[Layout('components.layouts.app', ['title' => 'Środek'])] class extends Co
     public function mount(?Asset $asset = null): void
     {
         if ($asset !== null && $asset->exists) {
+            if ($asset->isLockedForEditing()) {
+                session()->flash('status', 'Środek jest w trakcie akceptacji i nie może być teraz edytowany.');
+                $this->redirectRoute('assets.index', navigate: true);
+
+                return;
+            }
+
             $this->authorize('update', $asset);
             $this->editing = true;
             $this->form->setAsset($asset);
