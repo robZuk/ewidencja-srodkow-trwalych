@@ -10,25 +10,25 @@ use function Pest\Laravel\actingAs;
 
 beforeEach(function () {
     $this->seed(RolePermissionSeeder::class);
-    $this->editor = User::factory()->create()->assignRole('editor');
+    $this->admin = User::factory()->create()->assignRole('admin');
 });
 
-it('lists inventory fields for a manager', function () {
+it('lists inventory fields for an admin', function () {
     InventoryField::factory()->create(['name' => 'Dziekanat']);
 
-    actingAs($this->editor);
+    actingAs($this->admin);
 
     Volt::test('inventory-fields.index')->assertSee('Dziekanat');
 });
 
-it('forbids a viewer from managing fields', function () {
-    actingAs(User::factory()->create()->assignRole('viewer'));
+it('forbids non-admins from managing fields', function (string $role) {
+    actingAs(User::factory()->create()->assignRole($role));
 
     Volt::test('inventory-fields.index')->assertForbidden();
-});
+})->with(['editor', 'inventory_section', 'viewer']);
 
 it('creates an inventory field', function () {
-    actingAs($this->editor);
+    actingAs($this->admin);
 
     Volt::test('inventory-fields.form')
         ->set('form.code', '042')
@@ -43,7 +43,7 @@ it('creates an inventory field', function () {
 it('enforces a unique field code', function () {
     InventoryField::factory()->create(['code' => '001']);
 
-    actingAs($this->editor);
+    actingAs($this->admin);
 
     Volt::test('inventory-fields.form')
         ->set('form.code', '001')
@@ -57,12 +57,26 @@ it('deletes an empty field but not one with assets', function () {
     $withAssets = InventoryField::factory()->create();
     Asset::factory()->create(['inventory_field_id' => $withAssets->id]);
 
-    expect($this->editor->can('delete', $empty))->toBeTrue()
-        ->and($this->editor->can('delete', $withAssets))->toBeFalse();
+    expect($this->admin->can('delete', $empty))->toBeTrue()
+        ->and($this->admin->can('delete', $withAssets))->toBeFalse();
 
-    actingAs($this->editor);
+    actingAs($this->admin);
 
     Volt::test('inventory-fields.index')->call('delete', $empty->id);
 
     expect(InventoryField::find($empty->id))->toBeNull();
+});
+
+it('shows a user only the fields they belong to', function () {
+    $mine = InventoryField::factory()->create(['name' => 'Moje Pole']);
+    $other = InventoryField::factory()->create(['name' => 'Cudze Pole']);
+
+    $user = User::factory()->create()->assignRole('editor');
+    $user->inventoryFields()->attach($mine);
+
+    actingAs($user);
+
+    Volt::test('inventory-fields.mine')
+        ->assertSee('Moje Pole')
+        ->assertDontSee('Cudze Pole');
 });

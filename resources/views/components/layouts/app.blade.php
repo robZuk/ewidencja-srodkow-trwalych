@@ -41,6 +41,11 @@
                 <x-nav-link :href="route('transfers.index')" :active="request()->routeIs('transfers.*')" icon="bell-alert">
                     Powiadomienia
                 </x-nav-link>
+                @cannot('manage inventory fields')
+                    <x-nav-link :href="route('my-fields')" :active="request()->routeIs('my-fields')" icon="rectangle-stack">
+                        Moje pola spisowe
+                    </x-nav-link>
+                @endcannot
 
                 @can('decide transfers')
                     <div class="mt-4 px-3 text-xs font-semibold uppercase tracking-wider text-zinc-400">Inwentaryzacja</div>
@@ -52,10 +57,10 @@
                     </x-nav-link>
                 @endcan
 
-                @canany(['manage assets', 'manage users'])
+                @canany(['manage inventory fields', 'manage users'])
                     <div class="mt-4 px-3 text-xs font-semibold uppercase tracking-wider text-zinc-400">Administracja</div>
-                    @can('manage assets')
-                        <x-nav-link :href="route('inventory-fields.index')" :active="request()->routeIs('inventory-fields.*')" icon="rectangle-stack">
+                    @can('manage inventory fields')
+                        <x-nav-link :href="route('inventory-fields.index')" :active="request()->routeIs('inventory-fields.index') || request()->routeIs('inventory-fields.create') || request()->routeIs('inventory-fields.edit')" icon="rectangle-stack">
                             Pola Spisowe
                         </x-nav-link>
                     @endcan

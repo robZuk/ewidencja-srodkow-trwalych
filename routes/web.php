@@ -46,7 +46,11 @@ Route::middleware('auth')->group(function () {
         Route::get('powiadomienia/{transferRequest}/likwidacja-pdf', [DrukController::class, 'likwidacja'])->name('druki.likwidacja.pdf');
     });
 
-    Route::middleware('can:manage assets')->group(function () {
+    // Read-only view of the fields the current user belongs to.
+    Volt::route('moje-pola-spisowe', 'inventory-fields.mine')->name('my-fields');
+
+    // Inventory field administration — admins only.
+    Route::middleware('can:manage inventory fields')->group(function () {
         Volt::route('pola-spisowe', 'inventory-fields.index')->name('inventory-fields.index');
         Volt::route('pola-spisowe/nowy', 'inventory-fields.form')->name('inventory-fields.create');
         Volt::route('pola-spisowe/{inventoryField}/edytuj', 'inventory-fields.form')->name('inventory-fields.edit');

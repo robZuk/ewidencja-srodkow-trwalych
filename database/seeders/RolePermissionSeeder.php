@@ -14,10 +14,11 @@ class RolePermissionSeeder extends Seeder
     /** @var list<string> */
     private const PERMISSIONS = [
         'view assets',
-        'manage assets',      // create / update / delete
-        'request transfers',  // initiate a transfer or liquidation
-        'decide transfers',   // accept/reject as target field or inventory section
-        'manage users',       // user administration + impersonation
+        'manage assets',            // create / update / delete assets
+        'request transfers',        // initiate a transfer or liquidation
+        'decide transfers',         // accept/reject as target field or inventory section
+        'manage users',             // user administration + impersonation
+        'manage inventory fields',  // create/edit/delete pola spisowe (admin only)
     ];
 
     /** @var array<string, list<string>> */
