@@ -86,11 +86,16 @@ new #[Layout('components.layouts.app', ['title' => 'Środki'])] class extends Co
             <flux:subheading>Łącznie: {{ number_format($assets->total(), 0, ',', ' ') }}</flux:subheading>
         </div>
 
-        @can('manage assets')
-            <flux:button :href="route('assets.create')" variant="primary" icon="plus" wire:navigate>
-                Dodaj środek
-            </flux:button>
-        @endcan
+        @php($exportParams = ['search' => $search, 'status' => $status, 'field' => $field])
+        <div class="flex items-center gap-2">
+            <flux:button :href="route('assets.export.csv', $exportParams)" variant="subtle" icon="arrow-down-tray" size="sm">CSV</flux:button>
+            <flux:button :href="route('assets.export.xlsx', $exportParams)" variant="subtle" icon="table-cells" size="sm">Excel</flux:button>
+            @can('manage assets')
+                <flux:button :href="route('assets.create')" variant="primary" icon="plus" wire:navigate>
+                    Dodaj środek
+                </flux:button>
+            @endcan
+        </div>
     </div>
 
     {{-- Filters --}}
