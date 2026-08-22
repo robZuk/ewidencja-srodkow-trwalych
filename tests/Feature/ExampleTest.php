@@ -1,19 +1,15 @@
 <?php
 
-namespace Tests\Feature;
+use function Pest\Laravel\get;
 
-// use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
+it('redirects guests to the login page', function () {
+    get('/srodki')->assertRedirect(route('login'));
+});
 
-class ExampleTest extends TestCase
-{
-    /**
-     * A basic test example.
-     */
-    public function test_the_application_returns_a_successful_response(): void
-    {
-        $response = $this->get('/');
+it('redirects the root url to the assets list', function () {
+    get('/')->assertRedirect('/srodki');
+});
 
-        $response->assertStatus(200);
-    }
-}
+it('serves the login page', function () {
+    get('/login')->assertOk()->assertSee('Zaloguj się');
+});

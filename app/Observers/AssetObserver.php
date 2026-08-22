@@ -55,10 +55,22 @@ class AssetObserver
             'asset_id' => $asset->getKey(),
             'event' => $event,
             'field' => $field,
-            'old_value' => $oldValue === null ? null : (string) $oldValue,
-            'new_value' => $newValue === null ? null : (string) $newValue,
+            'old_value' => $this->stringify($oldValue),
+            'new_value' => $this->stringify($newValue),
             'user_id' => Auth::id(),
             'user_name' => Auth::user()?->name,
         ]);
+    }
+
+    /** Convert any attribute value (enum, date, bool, scalar) to a display string. */
+    private function stringify(mixed $value): ?string
+    {
+        return match (true) {
+            $value === null => null,
+            $value instanceof \BackedEnum => (string) $value->value,
+            $value instanceof \DateTimeInterface => $value->format('Y-m-d H:i:s'),
+            is_bool($value) => $value ? '1' : '0',
+            default => (string) $value,
+        };
     }
 }

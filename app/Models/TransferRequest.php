@@ -12,7 +12,27 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property int $id
+ * @property TransferType $type
+ * @property TransferStatus $status
+ * @property int|null $asset_id
+ * @property array<string, mixed>|null $asset_snapshot
+ * @property int $source_field_id
+ * @property int|null $target_field_id
+ * @property int|null $requested_by
+ * @property int|null $target_accepted_by
+ * @property int|null $inventory_accepted_by
+ * @property string|null $zmu_number
+ * @property string|null $note
+ * @property Carbon|null $resolved_at
+ * @property-read Asset|null $asset
+ * @property-read InventoryField|null $sourceField
+ * @property-read InventoryField|null $targetField
+ * @property-read User|null $requester
+ */
 class TransferRequest extends Model
 {
     /** @use HasFactory<TransferRequestFactory> */
