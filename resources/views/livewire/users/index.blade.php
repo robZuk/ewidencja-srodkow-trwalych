@@ -44,6 +44,7 @@ new #[Layout('components.layouts.app', ['title' => 'Użytkownicy'])] class exten
         return [
             'users' => User::query()
                 ->with('roles')
+                ->withCount('inventoryFields')
                 ->when($this->search !== '', function ($query) {
                     $query->where(function ($query) {
                         $query->where('name', 'like', "%{$this->search}%")
@@ -73,6 +74,7 @@ new #[Layout('components.layouts.app', ['title' => 'Użytkownicy'])] class exten
                     <th class="px-4 py-3 font-medium">Imię i nazwisko</th>
                     <th class="px-4 py-3 font-medium">E-mail</th>
                     <th class="px-4 py-3 font-medium">Rola</th>
+                    <th class="px-4 py-3 text-right font-medium">Pola spisowe</th>
                     <th class="px-4 py-3 text-right font-medium">Akcje</th>
                 </tr>
             </thead>
@@ -84,6 +86,7 @@ new #[Layout('components.layouts.app', ['title' => 'Użytkownicy'])] class exten
                         <td class="px-4 py-3">
                             <flux:badge size="sm">{{ $this->roleLabel($user->getRoleNames()->first()) }}</flux:badge>
                         </td>
+                        <td class="px-4 py-3 text-right tabular-nums">{{ $user->inventory_fields_count }}</td>
                         <td class="px-4 py-3">
                             <div class="flex items-center justify-end gap-1">
                                 @can('impersonate', $user)
@@ -99,7 +102,7 @@ new #[Layout('components.layouts.app', ['title' => 'Użytkownicy'])] class exten
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="4" class="px-4 py-12 text-center text-zinc-500">Brak użytkowników.</td></tr>
+                    <tr><td colspan="5" class="px-4 py-12 text-center text-zinc-500">Brak użytkowników.</td></tr>
                 @endforelse
             </tbody>
         </table>
