@@ -1,4 +1,4 @@
-@props(['active' => false, 'icon' => null])
+@props(['active' => false, 'icon' => null, 'badge' => null])
 
 <a {{ $attributes->merge(['href' => '#']) }}
     @class([
@@ -11,4 +11,10 @@
         <flux:icon :name="$icon" variant="outline" class="size-5 shrink-0" />
     @endif
     <span>{{ $slot }}</span>
+
+    @if ($badge)
+        <span class="ml-auto inline-flex min-w-5 items-center justify-center rounded-full bg-indigo-600 px-1.5 text-xs font-semibold text-white">
+            {{ $badge > 99 ? '99+' : $badge }}
+        </span>
+    @endif
 </a>

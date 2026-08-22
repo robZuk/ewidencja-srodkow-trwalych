@@ -112,4 +112,36 @@ class TransferRequest extends Model
     {
         return $query->where('type', $type->value);
     }
+
+    /**
+     * Open requests awaiting a decision the given user is allowed to make
+     * (step 1 as a target-field member, step 2 as the inventory section).
+     *
+     * @param  Builder<TransferRequest>  $query
+     * @return Builder<TransferRequest>
+     */
+    public function scopeActionableBy(Builder $query, User $user): Builder
+    {
+        return $query->open()->where(function (Builder $query) use ($user): void {
+            $query->whereRaw('1 = 0');
+
+            // Step 2 — inventory section confirms PendingInventory requests.
+            if ($user->can('decide transfers')) {
+                $query->orWhere('status', TransferStatus::PendingInventory->value);
+            }
+
+            // Step 1 — target-field members (or admins) accept Pending transfers.
+            if ($user->hasRole('admin')) {
+                $query->orWhere('status', TransferStatus::Pending->value);
+            } elseif ($user->can('request transfers')) {
+                $fieldIds = $user->inventoryFields()->pluck('inventory_fields.id')->all();
+
+                if ($fieldIds !== []) {
+                    $query->orWhere(fn (Builder $q) => $q
+                        ->where('status', TransferStatus::Pending->value)
+                        ->whereIn('target_field_id', $fieldIds));
+                }
+            }
+        });
+    }
 }

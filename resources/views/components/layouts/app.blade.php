@@ -38,7 +38,10 @@
                 <x-nav-link :href="route('assets.index')" :active="request()->routeIs('assets.*')" icon="squares-2x2">
                     Środki
                 </x-nav-link>
-                <x-nav-link :href="route('transfers.index')" :active="request()->routeIs('transfers.*')" icon="bell-alert">
+                @php($pendingApprovals = auth()->check()
+                    ? \App\Models\TransferRequest::actionableBy(auth()->user())->count()
+                    : 0)
+                <x-nav-link :href="route('transfers.index')" :active="request()->routeIs('transfers.*')" icon="bell-alert" :badge="$pendingApprovals">
                     Powiadomienia
                 </x-nav-link>
                 @cannot('view inventory fields')
