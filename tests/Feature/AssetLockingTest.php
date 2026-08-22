@@ -41,19 +41,33 @@ it('redirects away from the edit form when the asset is locked', function () {
         ->assertRedirect(route('assets.index'));
 });
 
-it('prevents opening a second request for an already-locked asset', function () {
-    $field = InventoryField::factory()->create();
+it('starts a transfer from the asset edit form and locks the asset', function () {
+    $target = InventoryField::factory()->create();
     $asset = Asset::factory()->create();
-    TransferRequest::factory()->create(['asset_id' => $asset->id]);
 
     actingAs($this->editor);
 
-    Volt::test('transfers.index')
-        ->set('assetId', $asset->id)
-        ->set('type', 'transfer')
-        ->set('targetFieldId', $field->id)
-        ->call('createRequest')
-        ->assertHasErrors('assetId');
+    Volt::test('assets.form', ['asset' => $asset])
+        ->set('targetFieldId', $target->id)
+        ->set('transferNote', 'Do nowej jednostki')
+        ->call('requestTransfer')
+        ->assertHasNoErrors()
+        ->assertRedirect(route('transfers.index'));
 
-    expect(TransferRequest::where('asset_id', $asset->id)->count())->toBe(1);
+    expect(TransferRequest::where('asset_id', $asset->id)->count())->toBe(1)
+        ->and($asset->refresh()->isLockedForEditing())->toBeTrue();
+});
+
+it('starts a liquidation from the asset edit form', function () {
+    $asset = Asset::factory()->create();
+
+    actingAs($this->editor);
+
+    Volt::test('assets.form', ['asset' => $asset])
+        ->set('liquidationNote', 'Sprzęt uszkodzony')
+        ->call('requestLiquidation')
+        ->assertHasNoErrors()
+        ->assertRedirect(route('transfers.index'));
+
+    expect($asset->refresh()->isLockedForEditing())->toBeTrue();
 });

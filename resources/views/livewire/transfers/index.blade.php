@@ -3,12 +3,8 @@
 use App\Actions\Transfers\AcceptLiquidation;
 use App\Actions\Transfers\AcceptTransfer;
 use App\Actions\Transfers\RejectRequest;
-use App\Actions\Transfers\RequestLiquidation;
-use App\Actions\Transfers\RequestTransfer;
 use App\Enums\TransferStatus;
 use App\Enums\TransferType;
-use App\Models\Asset;
-use App\Models\InventoryField;
 use App\Models\TransferRequest;
 use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
@@ -17,47 +13,6 @@ use Livewire\WithPagination;
 new #[Layout('components.layouts.app', ['title' => 'Powiadomienia'])] class extends Component
 {
     use WithPagination;
-
-    public ?int $assetId = null;
-
-    public string $type = 'transfer';
-
-    public ?int $targetFieldId = null;
-
-    public string $note = '';
-
-    public function createRequest(RequestTransfer $requestTransfer, RequestLiquidation $requestLiquidation): void
-    {
-        $this->authorize('create', TransferRequest::class);
-
-        $this->validate([
-            'assetId' => ['required', 'exists:assets,id'],
-            'type' => ['required', 'in:transfer,liquidation'],
-            'targetFieldId' => ['nullable', 'required_if:type,transfer', 'exists:inventory_fields,id'],
-            'note' => ['nullable', 'string', 'max:1000'],
-        ]);
-
-        $asset = Asset::findOrFail($this->assetId);
-
-        if ($asset->isLockedForEditing()) {
-            $this->addError('assetId', 'Ten środek ma już otwarte zgłoszenie w toku.');
-
-            return;
-        }
-
-        $user = auth()->user();
-
-        if ($this->type === 'transfer') {
-            $requestTransfer->handle($asset, InventoryField::findOrFail($this->targetFieldId), $user, $this->note ?: null);
-        } else {
-            $requestLiquidation->handle($asset, $user, $this->note ?: null);
-        }
-
-        $this->reset('assetId', 'targetFieldId', 'note');
-        $this->type = 'transfer';
-
-        session()->flash('status', 'Zgłoszenie zostało utworzone.');
-    }
 
     public function accept(TransferRequest $request, AcceptTransfer $acceptTransfer, AcceptLiquidation $acceptLiquidation): void
     {
@@ -93,46 +48,15 @@ new #[Layout('components.layouts.app', ['title' => 'Powiadomienia'])] class exte
                 ->with(['asset', 'sourceField', 'targetField', 'requester'])
                 ->latest()
                 ->paginate(15),
-            'assets' => Asset::query()->where('status', 'available')->orderBy('name')->get(),
-            'fields' => InventoryField::query()->orderBy('code')->get(),
-            'canRequest' => auth()->user()?->can('request transfers') ?? false,
         ];
     }
 }; ?>
 
 <div class="space-y-6">
-    <flux:heading size="xl">Powiadomienia</flux:heading>
-
-    @if ($canRequest)
-        <form wire:submit="createRequest" class="grid gap-4 rounded-xl border border-zinc-200 bg-white p-6 sm:grid-cols-2 lg:grid-cols-4 dark:border-zinc-800 dark:bg-zinc-950">
-            <flux:select wire:model="assetId" label="Środek" class="lg:col-span-2">
-                <flux:select.option value="">— wybierz środek —</flux:select.option>
-                @foreach ($assets as $asset)
-                    <flux:select.option value="{{ $asset->id }}">{{ $asset->inventory_number }} · {{ $asset->name }}</flux:select.option>
-                @endforeach
-            </flux:select>
-
-            <flux:select wire:model.live="type" label="Typ zgłoszenia">
-                <flux:select.option value="transfer">Przekazanie środka</flux:select.option>
-                <flux:select.option value="liquidation">Wniosek o likwidację</flux:select.option>
-            </flux:select>
-
-            @if ($type === 'transfer')
-                <flux:select wire:model="targetFieldId" label="Pole docelowe">
-                    <flux:select.option value="">— wybierz —</flux:select.option>
-                    @foreach ($fields as $field)
-                        <flux:select.option value="{{ $field->id }}">{{ $field->label() }}</flux:select.option>
-                    @endforeach
-                </flux:select>
-            @endif
-
-            <flux:input wire:model="note" label="Notatka" placeholder="opcjonalnie" class="{{ $type === 'transfer' ? 'lg:col-span-3' : 'lg:col-span-4' }}" />
-
-            <div class="sm:col-span-2 lg:col-span-4">
-                <flux:button type="submit" variant="primary" icon="paper-airplane">Utwórz zgłoszenie</flux:button>
-            </div>
-        </form>
-    @endif
+    <div>
+        <flux:heading size="xl">Powiadomienia</flux:heading>
+        <flux:subheading>Zgłoszenia przekazań i likwidacji do akceptacji. Nowe zgłoszenie rozpoczniesz z poziomu edycji środka.</flux:subheading>
+    </div>
 
     <div class="overflow-x-auto rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950">
         <table class="w-full text-left text-sm">
