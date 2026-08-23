@@ -100,6 +100,12 @@
                 </button>
 
                 <div class="ml-auto flex items-center gap-3">
+                    <flux:radio.group x-data variant="segmented" size="sm" x-model="$flux.appearance">
+                        <flux:radio value="light" icon="sun" title="Tryb jasny" />
+                        <flux:radio value="dark" icon="moon" title="Tryb ciemny" />
+                        <flux:radio value="system" icon="computer-desktop" title="Motyw systemowy" />
+                    </flux:radio.group>
+
                     @php($currentRole = auth()->user()?->getRoleNames()->first())
                     <span class="hidden text-sm text-zinc-500 sm:block">
                         {{ auth()->user()?->name }}

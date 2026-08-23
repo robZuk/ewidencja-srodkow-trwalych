@@ -28,6 +28,9 @@ new #[Layout('components.layouts.app', ['title' => 'Środki'])] class extends Co
     public ?int $field = null;
 
     #[Url]
+    public string $type = '';
+
+    #[Url]
     public string $sort = 'inventory_number';
 
     #[Url]
@@ -44,7 +47,7 @@ new #[Layout('components.layouts.app', ['title' => 'Środki'])] class extends Co
 
     public function updated(string $property): void
     {
-        if (in_array($property, ['search', 'status', 'field'], true)) {
+        if (in_array($property, ['search', 'status', 'field', 'type'], true)) {
             $this->resetPage();
         }
     }
@@ -133,10 +136,12 @@ new #[Layout('components.layouts.app', ['title' => 'Środki'])] class extends Co
                 ->search($this->search)
                 ->withStatus($this->status)
                 ->forField($this->field)
+                ->withType($this->type)
                 ->orderBy($sort, $this->direction === 'desc' ? 'desc' : 'asc')
                 ->paginate(15),
             'fields' => InventoryField::query()->orderBy('code')->get(),
             'statuses' => AssetStatus::cases(),
+            'types' => Asset::query()->whereNotNull('asset_type')->distinct()->orderBy('asset_type')->pluck('asset_type'),
             'opsAsset' => $this->opsAssetId !== null ? Asset::find($this->opsAssetId) : null,
         ];
     }
@@ -149,7 +154,7 @@ new #[Layout('components.layouts.app', ['title' => 'Środki'])] class extends Co
             <flux:subheading>Łącznie: {{ number_format($assets->total(), 0, ',', ' ') }}</flux:subheading>
         </div>
 
-        @php($exportParams = ['search' => $search, 'status' => $status, 'field' => $field])
+        @php($exportParams = ['search' => $search, 'status' => $status, 'field' => $field, 'type' => $type])
         <div class="flex items-center gap-2">
             <flux:button :href="route('assets.export.csv', $exportParams)" variant="subtle" icon="arrow-down-tray" size="sm">CSV</flux:button>
             <flux:button :href="route('assets.export.xlsx', $exportParams)" variant="subtle" icon="table-cells" size="sm">Excel</flux:button>
@@ -162,7 +167,7 @@ new #[Layout('components.layouts.app', ['title' => 'Środki'])] class extends Co
     </div>
 
     {{-- Filters --}}
-    <div class="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+    <div class="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         <flux:input
             wire:model.live.debounce.300ms="search"
             icon="magnifying-glass"
@@ -183,17 +188,25 @@ new #[Layout('components.layouts.app', ['title' => 'Środki'])] class extends Co
                 <flux:select.option value="{{ $inventoryField->id }}">{{ $inventoryField->label() }}</flux:select.option>
             @endforeach
         </flux:select>
+
+        <flux:select wire:model.live="type" placeholder="Wszystkie typy">
+            <flux:select.option value="">Wszystkie typy</flux:select.option>
+            @foreach ($types as $assetType)
+                <flux:select.option value="{{ $assetType }}">{{ $assetType }}</flux:select.option>
+            @endforeach
+        </flux:select>
     </div>
 
     {{-- Table --}}
     <div class="overflow-x-auto rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950">
         <table class="w-full text-left text-sm">
-            <thead class="border-b border-zinc-200 text-xs uppercase tracking-wider text-zinc-500 dark:border-zinc-800">
+            <thead class="border-b border-zinc-200 text-xs tracking-wider text-zinc-500 dark:border-zinc-800">
                 <tr>
                     <x-th column="inventory_number" :sort="$sort" :direction="$direction">Numer inw.</x-th>
                     <x-th column="name" :sort="$sort" :direction="$direction">Nazwa</x-th>
                     <th class="px-4 py-3 font-medium">Pole spisowe</th>
                     <th class="px-4 py-3 font-medium">Lokalizacja</th>
+                    <th class="px-4 py-3 font-medium">Typ</th>
                     <x-th column="value" :sort="$sort" :direction="$direction" class="text-right">Wartość</x-th>
                     <x-th column="status" :sort="$sort" :direction="$direction">Status</x-th>
                     <x-th column="purchase_date" :sort="$sort" :direction="$direction">Data zakupu</x-th>
@@ -207,6 +220,13 @@ new #[Layout('components.layouts.app', ['title' => 'Środki'])] class extends Co
                         <td class="px-4 py-3 font-medium text-zinc-800 dark:text-zinc-100">{{ $asset->name }}</td>
                         <td class="px-4 py-3 text-zinc-500">{{ $asset->inventoryField?->label() }}</td>
                         <td class="px-4 py-3 text-zinc-500">{{ $asset->location?->name ?? '—' }}</td>
+                        <td class="px-4 py-3">
+                            @if ($asset->asset_type)
+                                <flux:badge :color="$asset->asset_type === 'ST_WYS' ? 'amber' : 'sky'" size="sm">{{ $asset->asset_type }}</flux:badge>
+                            @else
+                                <span class="text-zinc-500">—</span>
+                            @endif
+                        </td>
                         <td class="px-4 py-3 text-right tabular-nums">{{ number_format((float) $asset->value, 2, ',', ' ') }} zł</td>
                         <td class="px-4 py-3">
                             <flux:badge :color="$asset->status->color()" size="sm">{{ $asset->status->label() }}</flux:badge>
@@ -270,7 +290,7 @@ new #[Layout('components.layouts.app', ['title' => 'Środki'])] class extends Co
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="8" class="px-4 py-12 text-center text-zinc-500">
+                        <td colspan="9" class="px-4 py-12 text-center text-zinc-500">
                             Brak środków spełniających kryteria.
                         </td>
                     </tr>

@@ -74,7 +74,7 @@ class AssetExportController extends Controller
     }
 
     /**
-     * @param  array{search: ?string, status: ?string, field: ?int}  $filters
+     * @param  array{search: ?string, status: ?string, field: ?int, type: ?string}  $filters
      * @return Builder<Asset>
      */
     private function assets(array $filters)
@@ -84,16 +84,18 @@ class AssetExportController extends Controller
             ->search($filters['search'])
             ->withStatus($filters['status'])
             ->forField($filters['field'])
+            ->withType($filters['type'])
             ->orderBy('inventory_number');
     }
 
-    /** @return array{search: ?string, status: ?string, field: ?int} */
+    /** @return array{search: ?string, status: ?string, field: ?int, type: ?string} */
     private function filters(Request $request): array
     {
         return [
             'search' => $request->string('search')->toString() ?: null,
             'status' => $request->string('status')->toString() ?: null,
             'field' => $request->integer('field') ?: null,
+            'type' => $request->string('type')->toString() ?: null,
         ];
     }
 

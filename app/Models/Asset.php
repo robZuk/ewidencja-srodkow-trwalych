@@ -147,4 +147,13 @@ class Asset extends Model
     {
         return blank($status) ? $query : $query->where('status', $status);
     }
+
+    /**
+     * @param  Builder<Asset>  $query
+     * @return Builder<Asset>
+     */
+    public function scopeWithType(Builder $query, ?string $type): Builder
+    {
+        return blank($type) ? $query : $query->where('asset_type', $type);
+    }
 }
