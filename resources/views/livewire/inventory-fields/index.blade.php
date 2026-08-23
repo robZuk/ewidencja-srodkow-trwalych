@@ -87,9 +87,9 @@ new #[Layout('components.layouts.app', ['title' => 'Pola Spisowe'])] class exten
                         <td class="px-4 py-3">
                             <div class="flex items-center justify-end gap-1">
                                 @can('update', $field)
-                                    <flux:button :href="route('inventory-fields.edit', $field)" size="xs" variant="subtle" icon="pencil-square" wire:navigate />
+                                    <flux:button :href="route('inventory-fields.edit', $field)" size="xs" variant="subtle" icon="pencil-square" title="Edytuj" wire:navigate />
                                     @can('delete', $field)
-                                        <flux:button wire:click="delete({{ $field->id }})" wire:confirm="Usunąć to pole spisowe?" size="xs" variant="subtle" icon="trash" />
+                                        <flux:button wire:click="delete({{ $field->id }})" wire:confirm="Usunąć to pole spisowe?" size="xs" variant="subtle" icon="trash" title="Usuń" />
                                     @else
                                         <flux:tooltip content="Nie można usunąć — pole ma przypisane środki">
                                             <flux:button size="xs" variant="subtle" icon="trash" disabled />

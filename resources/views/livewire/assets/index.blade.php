@@ -142,7 +142,7 @@ new #[Layout('components.layouts.app', ['title' => 'Środki'])] class extends Co
     }
 }; ?>
 
-<div>
+<div x-data="{ assetDetails: null }">
     <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
             <flux:heading size="xl">Środki jednostki</flux:heading>
@@ -213,8 +213,30 @@ new #[Layout('components.layouts.app', ['title' => 'Środki'])] class extends Co
                         </td>
                         <td class="px-4 py-3 text-zinc-500">{{ $asset->purchase_date?->format('Y-m-d') ?? '—' }}</td>
                         <td class="px-4 py-3">
+                            @php($assetDetail = [
+                                'inventory_number' => $asset->inventory_number,
+                                'name' => $asset->name,
+                                'field' => $asset->inventoryField?->label() ?? '—',
+                                'location' => $asset->location?->name ?? '—',
+                                'value' => number_format((float) $asset->value, 2, ',', ' ').' zł',
+                                'quantity' => (string) $asset->quantity,
+                                'asset_type' => $asset->asset_type ?: '—',
+                                'purchase_date' => $asset->purchase_date?->format('Y-m-d') ?? '—',
+                                'liquidation_date' => $asset->liquidation_date?->format('Y-m-d') ?? '—',
+                                'status' => $asset->status->label(),
+                                'doc' => $asset->purchase_doc_number ?: '—',
+                                'description' => $asset->description ?: '—',
+                                'comment' => $asset->comment ?: '—',
+                            ])
                             <div class="flex items-center justify-end gap-1">
-                                <flux:button :href="route('assets.history', $asset)" size="xs" variant="subtle" icon="clock" wire:navigate />
+                                <flux:button
+                                    x-on:click="assetDetails = {{ \Illuminate\Support\Js::from($assetDetail) }}; window.Flux.modal('asset-details').show()"
+                                    size="xs"
+                                    variant="subtle"
+                                    icon="eye"
+                                    title="Podgląd"
+                                />
+                                <flux:button :href="route('assets.history', $asset)" size="xs" variant="subtle" icon="clock" title="Historia zmian" wire:navigate />
                                 @can('create', App\Models\TransferRequest::class)
                                     @if ($asset->open_transfers_count === 0)
                                         <flux:button
@@ -230,13 +252,14 @@ new #[Layout('components.layouts.app', ['title' => 'Środki'])] class extends Co
                                     @if ($asset->open_transfers_count > 0)
                                         <flux:badge color="amber" size="sm" icon="lock-closed">W akceptacji</flux:badge>
                                     @else
-                                        <flux:button :href="route('assets.edit', $asset)" size="xs" variant="subtle" icon="pencil-square" wire:navigate />
+                                        <flux:button :href="route('assets.edit', $asset)" size="xs" variant="subtle" icon="pencil-square" title="Edytuj" wire:navigate />
                                         <flux:button
                                             wire:click="delete({{ $asset->id }})"
                                             wire:confirm="Czy na pewno usunąć ten środek?"
                                             size="xs"
                                             variant="subtle"
                                             icon="trash"
+                                            title="Usuń"
                                         />
                                     @endif
                                 @endcan
@@ -309,6 +332,54 @@ new #[Layout('components.layouts.app', ['title' => 'Środki'])] class extends Co
                     Wniosek o likwidację
                 </flux:button>
             </div>
+        </div>
+    </flux:modal>
+
+    {{-- Read-only asset preview (available to anyone who can view assets). --}}
+    <flux:modal name="asset-details" class="max-w-lg">
+        <div class="space-y-4">
+            <flux:heading size="lg">Podgląd środka</flux:heading>
+
+            <dl class="grid grid-cols-3 gap-x-4 gap-y-3 text-sm">
+                <dt class="text-zinc-500">Numer inwentarzowy</dt>
+                <dd class="col-span-2 font-mono text-xs" x-text="assetDetails?.inventory_number"></dd>
+
+                <dt class="text-zinc-500">Nazwa</dt>
+                <dd class="col-span-2" x-text="assetDetails?.name"></dd>
+
+                <dt class="text-zinc-500">Pole spisowe</dt>
+                <dd class="col-span-2" x-text="assetDetails?.field"></dd>
+
+                <dt class="text-zinc-500">Lokalizacja</dt>
+                <dd class="col-span-2" x-text="assetDetails?.location"></dd>
+
+                <dt class="text-zinc-500">Wartość</dt>
+                <dd class="col-span-2 tabular-nums" x-text="assetDetails?.value"></dd>
+
+                <dt class="text-zinc-500">Ilość</dt>
+                <dd class="col-span-2" x-text="assetDetails?.quantity"></dd>
+
+                <dt class="text-zinc-500">Środek (typ)</dt>
+                <dd class="col-span-2" x-text="assetDetails?.asset_type"></dd>
+
+                <dt class="text-zinc-500">Data zakupu</dt>
+                <dd class="col-span-2" x-text="assetDetails?.purchase_date"></dd>
+
+                <dt class="text-zinc-500">Data likwidacji</dt>
+                <dd class="col-span-2" x-text="assetDetails?.liquidation_date"></dd>
+
+                <dt class="text-zinc-500">Status</dt>
+                <dd class="col-span-2" x-text="assetDetails?.status"></dd>
+
+                <dt class="text-zinc-500">Nr dok. zakupu</dt>
+                <dd class="col-span-2" x-text="assetDetails?.doc"></dd>
+
+                <dt class="text-zinc-500">Opis</dt>
+                <dd class="col-span-2" x-text="assetDetails?.description"></dd>
+
+                <dt class="text-zinc-500">Komentarz</dt>
+                <dd class="col-span-2" x-text="assetDetails?.comment"></dd>
+            </dl>
         </div>
     </flux:modal>
 </div>

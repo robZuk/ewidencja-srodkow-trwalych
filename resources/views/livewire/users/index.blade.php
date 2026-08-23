@@ -97,10 +97,10 @@ new #[Layout('components.layouts.app', ['title' => 'Użytkownicy'])] class exten
                                     </flux:button>
                                 @endcan
                                 @can('update', $user)
-                                    <flux:button :href="route('users.edit', $user)" size="xs" variant="subtle" icon="pencil-square" wire:navigate />
+                                    <flux:button :href="route('users.edit', $user)" size="xs" variant="subtle" icon="pencil-square" title="Edytuj" wire:navigate />
                                 @endcan
                                 @can('delete', $user)
-                                    <flux:button wire:click="delete({{ $user->id }})" wire:confirm="Usunąć tego użytkownika?" size="xs" variant="subtle" icon="trash" />
+                                    <flux:button wire:click="delete({{ $user->id }})" wire:confirm="Usunąć tego użytkownika?" size="xs" variant="subtle" icon="trash" title="Usuń" />
                                 @endcan
                                 @cannot('update', $user)
                                     @cannot('impersonate', $user)
