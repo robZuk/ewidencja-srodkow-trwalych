@@ -6,7 +6,6 @@ namespace App\Models;
 
 use App\Enums\TransferStatus;
 use App\Enums\TransferType;
-use App\Models\Concerns\LogsActivity;
 use Database\Factories\TransferRequestFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -37,12 +36,7 @@ use Illuminate\Support\Carbon;
 class TransferRequest extends Model
 {
     /** @use HasFactory<TransferRequestFactory> */
-    use HasFactory, LogsActivity, SoftDeletes;
-
-    public function activityLabel(): string
-    {
-        return 'Zgłoszenie #'.$this->id.' ('.$this->type->label().')';
-    }
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'type',

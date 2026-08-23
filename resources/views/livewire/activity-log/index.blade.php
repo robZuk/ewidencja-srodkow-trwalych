@@ -4,7 +4,6 @@ use App\Models\Activity;
 use App\Models\Asset;
 use App\Models\InventoryField;
 use App\Models\Location;
-use App\Models\TransferRequest;
 use App\Models\User;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
@@ -21,7 +20,6 @@ new #[Layout('components.layouts.app', ['title' => 'Historia zmian'])] class ext
         User::class => 'Użytkownik',
         InventoryField::class => 'Pole spisowe',
         Location::class => 'Lokalizacja',
-        TransferRequest::class => 'Zgłoszenie',
     ];
 
     #[Url]
@@ -80,7 +78,37 @@ new #[Layout('components.layouts.app', ['title' => 'Historia zmian'])] class ext
     }
 }; ?>
 
-<div x-data="{ changes: null, label: '' }">
+<div x-data="{
+    changes: null,
+    label: '',
+    fieldLabels: {
+        inventory_number: 'Numer inwentarzowy',
+        name: 'Nazwa',
+        description: 'Opis',
+        purchase_doc_number: 'Nr dokumentu zakupu',
+        value: 'Wartość',
+        purchase_date: 'Data zakupu',
+        liquidation_date: 'Data likwidacji',
+        quantity: 'Ilość',
+        asset_type: 'Środek (typ)',
+        location_id: 'Lokalizacja',
+        inventory_field_id: 'Pole spisowe',
+        status: 'Status',
+        comment: 'Komentarz',
+        email: 'Adres e-mail',
+        code: 'Kod',
+        type: 'Typ',
+        source_field_id: 'Pole źródłowe',
+        target_field_id: 'Pole docelowe',
+        target_accepted_by: 'Zaakceptował (pole)',
+        inventory_accepted_by: 'Zaakceptował (inwentaryzacja)',
+        zmu_number: 'Nr druku ZMU',
+        note: 'Notatka',
+        resolved_at: 'Rozstrzygnięto',
+        requested_by: 'Zgłaszający',
+    },
+    fieldLabel(key) { return this.fieldLabels[key] ?? key; },
+}">
     <div class="mb-6">
         <flux:heading size="xl">Historia zmian</flux:heading>
         <flux:subheading>Dziennik zmian w systemie: dodawanie, aktualizacja i usuwanie.</flux:subheading>
@@ -167,7 +195,7 @@ new #[Layout('components.layouts.app', ['title' => 'Historia zmian'])] class ext
                     <tbody>
                         <template x-for="[field, chg] in Object.entries(changes || {})" :key="field">
                             <tr class="border-t border-zinc-100 dark:border-zinc-800">
-                                <td class="py-2 pr-3 font-mono text-xs" x-text="field"></td>
+                                <td class="py-2 pr-3" x-text="fieldLabel(field)"></td>
                                 <td class="py-2 pr-3 text-zinc-500" x-text="chg.old ?? '—'"></td>
                                 <td class="py-2" x-text="chg.new ?? '—'"></td>
                             </tr>
