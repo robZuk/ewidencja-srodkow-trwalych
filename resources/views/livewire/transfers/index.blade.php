@@ -104,6 +104,7 @@ new #[Layout('components.layouts.app', ['title' => 'Powiadomienia'])] class exte
                                 'status' => $request->status->label(),
                                 'asset' => $request->asset?->name ?? $request->asset_snapshot['name'] ?? '—',
                                 'inventory_number' => $request->asset?->inventory_number ?? $request->asset_snapshot['inventory_number'] ?? '',
+                                'value' => number_format((float) ($request->asset?->value ?? $request->asset_snapshot['value'] ?? 0), 2, ',', ' ').' zł',
                                 'source' => $request->sourceField?->label() ?? '—',
                                 'target' => $request->targetField?->label() ?? '—',
                                 'requester' => $request->requester?->name ?? '—',
@@ -152,6 +153,9 @@ new #[Layout('components.layouts.app', ['title' => 'Powiadomienia'])] class exte
                     <span x-text="details?.asset"></span>
                     <span class="ml-1 font-mono text-xs text-zinc-500" x-text="details?.inventory_number"></span>
                 </dd>
+
+                <dt class="text-zinc-500">Wartość</dt>
+                <dd class="col-span-2 tabular-nums" x-text="details?.value"></dd>
 
                 <dt class="text-zinc-500">Pole źródłowe</dt>
                 <dd class="col-span-2" x-text="details?.source"></dd>
