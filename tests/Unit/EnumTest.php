@@ -11,8 +11,8 @@ it('exposes Polish labels for asset statuses', function () {
 });
 
 it('exposes Polish labels for transfer types', function () {
-    expect(TransferType::Transfer->label())->toBe('Przekazanie środka')
-        ->and(TransferType::Liquidation->label())->toBe('Wniosek o likwidację');
+    expect(TransferType::Transfer->label())->toBe('Przekazanie')
+        ->and(TransferType::Liquidation->label())->toBe('Likwidacja');
 });
 
 it('knows which transfer statuses are still open', function () {

@@ -13,8 +13,8 @@ enum TransferType: string
     public function label(): string
     {
         return match ($this) {
-            self::Transfer => 'Przekazanie środka',
-            self::Liquidation => 'Wniosek o likwidację',
+            self::Transfer => 'Przekazanie',
+            self::Liquidation => 'Likwidacja',
         };
     }
 }
