@@ -55,7 +55,7 @@ class DemoSeeder extends Seeder
     private function createUsers(): void
     {
         $accounts = [
-            ['Robert (Admin)', 'admin@example.com', 'admin'],
+            ['Robert Żuk', 'admin@example.com', 'admin'],
             ['Edytor Środków', 'editor@example.com', 'editor'],
             ['Sekcja Inwentaryzacji', 'inwentaryzacja@example.com', 'inventory_section'],
             ['Konto Demo', 'demo@example.com', 'viewer'],

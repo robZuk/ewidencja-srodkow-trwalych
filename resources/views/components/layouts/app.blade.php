@@ -95,10 +95,11 @@
                 </button>
 
                 <div class="ml-auto flex items-center gap-3">
+                    @php($currentRole = auth()->user()?->getRoleNames()->first())
                     <span class="hidden text-sm text-zinc-500 sm:block">
                         {{ auth()->user()?->name }}
                         <span class="ml-1 rounded bg-zinc-100 px-1.5 py-0.5 text-xs font-medium text-zinc-500 dark:bg-zinc-800">
-                            {{ auth()->user()?->getRoleNames()->first() }}
+                            {{ \App\Livewire\Forms\UserForm::ROLES[$currentRole] ?? $currentRole }}
                         </span>
                     </span>
                     <form method="POST" action="{{ route('logout') }}">
