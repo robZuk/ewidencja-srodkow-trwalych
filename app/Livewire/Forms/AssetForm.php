@@ -6,6 +6,7 @@ namespace App\Livewire\Forms;
 
 use App\Enums\AssetStatus;
 use App\Models\Asset;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Livewire\Form;
 
@@ -111,6 +112,14 @@ class AssetForm extends Form
         $this->validate();
 
         // Status and liquidation date are workflow-managed — not updated here.
-        $this->asset?->update($this->except('asset', 'status', 'liquidation_date'));
+        $data = $this->except('asset', 'status', 'liquidation_date');
+
+        // The inventory field of an existing asset changes only via transfers;
+        // only administrators may correct it directly.
+        if (! Auth::user()?->hasRole('admin')) {
+            unset($data['inventory_field_id']);
+        }
+
+        $this->asset?->update($data);
     }
 }

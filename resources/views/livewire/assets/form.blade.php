@@ -50,6 +50,9 @@ new #[Layout('components.layouts.app', ['title' => 'Środek'])] class extends Co
         return [
             'fields' => InventoryField::query()->orderBy('code')->get(),
             'locations' => Location::query()->orderBy('name')->get(),
+            // Pola spisowe of an existing asset change via transfers; only admins
+            // may edit it directly (it stays selectable when creating).
+            'fieldEditable' => ! $this->editing || (auth()->user()?->hasRole('admin') ?? false),
         ];
     }
 }; ?>
@@ -65,12 +68,22 @@ new #[Layout('components.layouts.app', ['title' => 'Środek'])] class extends Co
             <flux:input wire:model="form.inventory_number" label="Numer inwentarzowy" required />
             <flux:input wire:model="form.name" label="Nazwa" required />
 
-            <flux:select wire:model="form.inventory_field_id" label="Pole spisowe" required>
-                <flux:select.option value="">— wybierz —</flux:select.option>
-                @foreach ($fields as $field)
-                    <flux:select.option value="{{ $field->id }}">{{ $field->label() }}</flux:select.option>
-                @endforeach
-            </flux:select>
+            @if ($fieldEditable)
+                <flux:select wire:model="form.inventory_field_id" label="Pole spisowe" required>
+                    <flux:select.option value="">— wybierz —</flux:select.option>
+                    @foreach ($fields as $field)
+                        <flux:select.option value="{{ $field->id }}">{{ $field->label() }}</flux:select.option>
+                    @endforeach
+                </flux:select>
+            @else
+                <div>
+                    <flux:label>Pole spisowe</flux:label>
+                    <div class="mt-1 text-sm text-zinc-700 dark:text-zinc-200">
+                        {{ $fields->firstWhere('id', $form->inventory_field_id)?->label() ?? '—' }}
+                    </div>
+                    <flux:description>Zmienia się poprzez przekazanie środka.</flux:description>
+                </div>
+            @endif
 
             <flux:select wire:model="form.location_id" label="Lokalizacja">
                 <flux:select.option value="">— brak —</flux:select.option>

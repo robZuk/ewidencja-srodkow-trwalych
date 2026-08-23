@@ -90,6 +90,38 @@ it('forbids a viewer from creating an asset', function () {
     Volt::test('assets.form')->assertForbidden();
 });
 
+it('prevents an editor from changing the asset inventory field', function () {
+    $from = InventoryField::factory()->create();
+    $to = InventoryField::factory()->create();
+    $asset = Asset::factory()->create(['inventory_field_id' => $from->id]);
+
+    actingAs(editor());
+
+    Volt::test('assets.form', ['asset' => $asset])
+        ->set('form.inventory_field_id', $to->id)
+        ->set('form.name', 'Zmieniona nazwa')
+        ->call('save')
+        ->assertHasNoErrors();
+
+    expect($asset->refresh()->inventory_field_id)->toBe($from->id)
+        ->and($asset->name)->toBe('Zmieniona nazwa');
+});
+
+it('lets an admin change the asset inventory field', function () {
+    $from = InventoryField::factory()->create();
+    $to = InventoryField::factory()->create();
+    $asset = Asset::factory()->create(['inventory_field_id' => $from->id]);
+
+    actingAs(User::factory()->create()->assignRole('admin'));
+
+    Volt::test('assets.form', ['asset' => $asset])
+        ->set('form.inventory_field_id', $to->id)
+        ->call('save')
+        ->assertHasNoErrors();
+
+    expect($asset->refresh()->inventory_field_id)->toBe($to->id);
+});
+
 it('allows only an admin to delete an asset', function () {
     $asset = Asset::factory()->create();
     $admin = User::factory()->create()->assignRole('admin');
