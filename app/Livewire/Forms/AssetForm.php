@@ -54,12 +54,10 @@ class AssetForm extends Form
             'purchase_doc_number' => ['nullable', 'string', 'max:255'],
             'value' => ['required', 'numeric', 'min:0'],
             'purchase_date' => ['nullable', 'date'],
-            'liquidation_date' => ['nullable', 'date', 'after_or_equal:purchase_date'],
             'quantity' => ['required', 'integer', 'min:1'],
             'asset_type' => ['nullable', 'string', 'max:255'],
             'location_id' => ['nullable', Rule::exists('locations', 'id')],
             'inventory_field_id' => ['required', Rule::exists('inventory_fields', 'id')],
-            'status' => ['required', Rule::enum(AssetStatus::class)],
             'comment' => ['nullable', 'string'],
         ];
     }
@@ -100,13 +98,19 @@ class AssetForm extends Form
     {
         $this->validate();
 
-        return Asset::create($this->except('asset'));
+        // A new asset always starts as available; status and liquidation date are
+        // driven by the transfer/liquidation workflow, never edited by hand.
+        $data = $this->except('asset', 'status', 'liquidation_date');
+        $data['status'] = AssetStatus::Available->value;
+
+        return Asset::create($data);
     }
 
     public function update(): void
     {
         $this->validate();
 
-        $this->asset?->update($this->except('asset'));
+        // Status and liquidation date are workflow-managed — not updated here.
+        $this->asset?->update($this->except('asset', 'status', 'liquidation_date'));
     }
 }

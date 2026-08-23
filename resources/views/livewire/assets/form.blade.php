@@ -1,6 +1,5 @@
 <?php
 
-use App\Enums\AssetStatus;
 use App\Livewire\Forms\AssetForm;
 use App\Models\Asset;
 use App\Models\InventoryField;
@@ -51,7 +50,6 @@ new #[Layout('components.layouts.app', ['title' => 'Środek'])] class extends Co
         return [
             'fields' => InventoryField::query()->orderBy('code')->get(),
             'locations' => Location::query()->orderBy('name')->get(),
-            'statuses' => AssetStatus::cases(),
         ];
     }
 }; ?>
@@ -85,15 +83,21 @@ new #[Layout('components.layouts.app', ['title' => 'Środek'])] class extends Co
             <flux:input wire:model="form.quantity" type="number" min="1" label="Ilość" required />
 
             <flux:input wire:model="form.purchase_date" type="date" label="Data zakupu" />
-            <flux:input wire:model="form.liquidation_date" type="date" label="Data likwidacji" />
-
             <flux:input wire:model="form.asset_type" label="Środek (typ)" placeholder="np. ST_NIS" />
 
-            <flux:select wire:model="form.status" label="Status" required>
-                @foreach ($statuses as $case)
-                    <flux:select.option value="{{ $case->value }}">{{ $case->label() }}</flux:select.option>
-                @endforeach
-            </flux:select>
+            @if ($editing)
+                @php($assetStatus = \App\Enums\AssetStatus::from($form->status))
+                <div class="sm:col-span-2">
+                    <flux:label>Status</flux:label>
+                    <div class="mt-1 flex flex-wrap items-center gap-2">
+                        <flux:badge :color="$assetStatus->color()" size="sm">{{ $assetStatus->label() }}</flux:badge>
+                        @if ($form->liquidation_date)
+                            <span class="text-sm text-zinc-500">data likwidacji: {{ $form->liquidation_date }}</span>
+                        @endif
+                    </div>
+                    <flux:description>Status i data likwidacji zmieniają się automatycznie przez przekazania i likwidacje.</flux:description>
+                </div>
+            @endif
 
             <flux:input wire:model="form.purchase_doc_number" label="Numer dokumentu zakupu" class="sm:col-span-2" />
 
