@@ -123,10 +123,14 @@ class Asset extends Model
             return $query;
         }
 
-        return $query->where(function (Builder $query) use ($term): void {
-            $query->where('name', 'like', "%{$term}%")
-                ->orWhere('inventory_number', 'like', "%{$term}%")
-                ->orWhere('description', 'like', "%{$term}%");
+        // `like` is case-sensitive on PostgreSQL but case-insensitive on MySQL —
+        // use `ilike` on PG so search behaves the same across both engines.
+        $like = $query->getModel()->getConnection()->getDriverName() === 'pgsql' ? 'ilike' : 'like';
+
+        return $query->where(function (Builder $query) use ($term, $like): void {
+            $query->where('name', $like, "%{$term}%")
+                ->orWhere('inventory_number', $like, "%{$term}%")
+                ->orWhere('description', $like, "%{$term}%");
         });
     }
 

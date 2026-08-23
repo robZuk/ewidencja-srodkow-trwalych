@@ -1,67 +1,46 @@
 # Deployment
 
-The app is a standard Laravel 13 + MySQL 8 application. Any Docker-capable host works;
-below are notes for two common PaaS options. A live demo URL can be added to the README
-once deployed.
+The app is a Laravel 13 + **PostgreSQL 16** application, served in production by
+**FrankenPHP** in a Docker container. The supported target is a **Mikr.us VPS** —
+see the step-by-step runbook:
 
-## Prerequisites
+➡️ **[docs/deploy-mikrus.md](deploy-mikrus.md)**
 
-- A MySQL 8 database (managed plugin or container).
-- Environment variables (see `.env.docker` for the full list). At minimum:
+## In short
 
-```dotenv
-APP_NAME="Asset Inventory"
-APP_ENV=production
-APP_KEY=            # php artisan key:generate --show
-APP_DEBUG=false
-APP_URL=https://your-domain
+Production runs as a self-contained Docker Compose stack
+(`docker-compose.prod.yml`):
 
-DB_CONNECTION=mysql
-DB_HOST=...
-DB_DATABASE=...
-DB_USERNAME=...
-DB_PASSWORD=...
+- **app** — `docker/Dockerfile.prod` (FrankenPHP serving `public/` on `:8080`,
+  HTTP; TLS is terminated at the Mikr.us edge).
+- **db** — `postgres:16-alpine` on an internal-only network, data in the `pgdata`
+  volume.
 
-SESSION_DRIVER=database
-QUEUE_CONNECTION=database
-CACHE_STORE=database
-```
+Config/secrets come from `.env.prod` (copy `.env.prod.example`), used both for
+compose interpolation (`--env-file .env.prod`) and injected into the containers
+(`env_file`). There is no `.env` file baked into the image.
 
-## Release steps
-
-Run once per deploy, after the code is in place and the DB is reachable:
+On container start the entrypoint (`docker/entrypoint.prod.sh`) runs
+`migrate --force`, seeds roles (`RolePermissionSeeder`, idempotent), and warms
+`config:cache` + `view:cache` (no `route:cache` — the `logout` route is a
+closure), then starts FrankenPHP.
 
 ```bash
-composer install --no-dev --optimize-autoloader
-npm ci && npm run build
-php artisan migrate --force
-php artisan db:seed --class=RolePermissionSeeder --force   # roles/permissions
-# optional demo data for a public demo:
-php artisan db:seed --class=DemoSeeder --force
-php artisan config:cache && php artisan route:cache && php artisan view:cache
+# first deploy / redeploy on the server
+docker compose --env-file .env.prod -f docker-compose.prod.yml up -d --build
 ```
 
-Serve with `php artisan serve` behind a proxy, or php-fpm + nginx, or Octane.
+## Other hosts
 
-## Railway
-
-1. New project → **Deploy from repo**; add the **MySQL** plugin.
-2. Set the env vars above (Railway injects the DB connection variables — map them to
-   `DB_*`).
-3. Add a release/start command that runs the release steps then serves the app.
-
-## Fly.io
-
-1. `fly launch` (detects the Dockerfile), `fly mysql create` (or an external DB).
-2. `fly secrets set APP_KEY=... DB_...=...`
-3. Add the release steps as a `[deploy] release_command` and start the server in the
-   process group.
+Any Docker-capable host works with the same `docker-compose.prod.yml`. Adjust
+`WEB_PORT`, point `DB_HOST` at your database, and terminate TLS at your proxy /
+load balancer. A pre-built image can be published to a registry via
+`.github/workflows/deploy.yml` (GHCR) — inactive until the repo is on GitHub with
+the `MIKRUS_*` secrets set.
 
 ## Notes
 
-- Generate a fresh `APP_KEY` for production; do not reuse the development key in
+- Generate a fresh `APP_KEY` for production; never reuse the development key from
   `.env.docker`.
-- For a public read-only demo, seed `DemoSeeder` and hand out the `demo@example.com`
-  account (password `password`).
-- Deploying is an account-specific action — it requires your own PaaS/cloud
-  credentials and is intentionally left as a manual step.
+- No public demo account is seeded in production. Create an admin manually
+  (see the runbook, step 7). `DemoSeeder` remains available if you want a demo.

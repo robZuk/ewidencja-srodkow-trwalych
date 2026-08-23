@@ -10,14 +10,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         curl \
         gnupg \
         default-mysql-client \
+        postgresql-client \
         libzip-dev \
         libpng-dev \
         libjpeg-dev \
         libfreetype6-dev \
         libicu-dev \
         libonig-dev \
+        libpq-dev \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install -j"$(nproc)" pdo_mysql gd zip intl bcmath exif \
+    && docker-php-ext-install -j"$(nproc)" pdo_mysql pdo_pgsql gd zip intl bcmath exif \
     && rm -rf /var/lib/apt/lists/*
 
 # Node.js 22 (Vite dev server + asset build).

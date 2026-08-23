@@ -1,0 +1,14 @@
+# FrankenPHP serves the Laravel public/ directory over plain HTTP on :8080.
+# HTTPS is handled upstream by the Mikr.us edge, so auto-HTTPS is disabled.
+{
+	frankenphp
+	auto_https off
+	admin off
+	persist_config off
+}
+
+:8080 {
+	root * /app/public
+	encode zstd gzip
+	php_server
+}

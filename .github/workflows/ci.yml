@@ -10,6 +10,21 @@ jobs:
     name: Lint, static analysis, tests
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: asset_inventory
+          POSTGRES_USER: app
+          POSTGRES_PASSWORD: secret
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U app -d asset_inventory"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+
     steps:
       - uses: actions/checkout@v4
 
@@ -17,7 +32,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
-          extensions: pdo_mysql, gd, zip, intl, bcmath, exif, mbstring
+          extensions: pdo_mysql, pdo_pgsql, gd, zip, intl, bcmath, exif, mbstring
           coverage: none
 
       - name: Cache Composer packages
@@ -42,6 +57,15 @@ jobs:
         run: ./vendor/bin/phpstan analyse --no-progress --memory-limit=1G
 
       - name: Run tests (Pest)
+        # Run the suite on PostgreSQL (the deployment engine). These real env vars
+        # override phpunit.xml's non-forced sqlite defaults.
+        env:
+          DB_CONNECTION: pgsql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_DATABASE: asset_inventory
+          DB_USERNAME: app
+          DB_PASSWORD: secret
         run: ./vendor/bin/pest
 
   assets:

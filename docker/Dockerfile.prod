@@ -1,0 +1,66 @@
+# Production image. Three stages:
+#   1. vendor   — fetch PHP packages (Flux ships CSS here, needed by the asset build)
+#   2. frontend — Vite build of public/build (imports vendor/livewire/flux CSS)
+#   3. runtime  — FrankenPHP serving public/ (replaces nginx + php-fpm)
+# Plain HTTP on :8080 — TLS is terminated at the Mikr.us edge.
+
+# --- Stage 1: PHP dependencies ---------------------------------------------
+FROM composer:2 AS vendor
+WORKDIR /app
+COPY composer.json composer.lock ./
+# --no-scripts: package:discover needs the full app, which isn't here yet.
+RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist --no-interaction
+
+# --- Stage 2: front-end assets (Vite → public/build) -----------------------
+FROM node:22-alpine AS frontend
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci --no-audit --no-fund
+COPY resources ./resources
+COPY vite.config.js ./
+# resources/css/app.css imports vendor/livewire/flux/dist/flux.css.
+COPY --from=vendor /app/vendor ./vendor
+RUN npm run build
+
+# --- Stage 3: runtime ------------------------------------------------------
+FROM dunglas/frankenphp:1-php8.4 AS runtime
+
+# curl for the container HEALTHCHECK; PHP extensions via the bundled helper.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/* \
+    && install-php-extensions pdo_pgsql gd zip intl bcmath exif
+
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+WORKDIR /app
+
+# App source + PHP deps (from stage 1) + built assets (from stage 2).
+COPY . .
+COPY --from=vendor /app/vendor ./vendor
+COPY --from=frontend /app/public/build ./public/build
+# Regenerate the optimized autoloader and run package:discover against the full app.
+RUN composer dump-autoload --optimize --classmap-authoritative --no-dev \
+    && rm -rf /root/.composer
+
+# Production PHP settings, web-server + start config.
+COPY docker/php-prod.ini /usr/local/etc/php/conf.d/zz-prod.ini
+COPY docker/Caddyfile /etc/frankenphp/Caddyfile
+COPY docker/entrypoint.prod.sh /usr/local/bin/entrypoint.prod.sh
+RUN chmod +x /usr/local/bin/entrypoint.prod.sh \
+    && mkdir -p storage/framework/cache storage/framework/sessions \
+        storage/framework/views storage/logs bootstrap/cache /data /config \
+    && chown -R www-data:www-data storage bootstrap/cache /data /config
+
+ENV APP_ENV=production \
+    APP_DEBUG=false \
+    XDG_CONFIG_HOME=/config \
+    XDG_DATA_HOME=/data
+
+EXPOSE 8080
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
+    CMD curl -fsS http://localhost:8080/up || exit 1
+
+USER www-data
+ENTRYPOINT ["entrypoint.prod.sh"]

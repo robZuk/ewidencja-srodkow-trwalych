@@ -1,9 +1,32 @@
+# Build context excludes — keep the production image lean and reproducible.
+# vendor/ and node_modules/ are rebuilt inside the image; env files are injected
+# at runtime (docker-compose env_file), never baked in.
 .git
-vendor
+.github
+.gitignore
+.gitattributes
+
 node_modules
-public/build
-storage/framework/cache
-storage/framework/sessions
-storage/framework/views
-storage/logs
+vendor
+
 .env
+.env.*
+!.env.prod.example
+
+public/build
+public/hot
+public/storage
+
+storage/logs/*
+storage/framework/cache/data/*
+storage/framework/sessions/*
+storage/framework/views/*
+
+tests
+docs
+*.md
+.phpunit.result.cache
+.phpunit.cache
+.phpactor.json
+.idea
+.vscode
