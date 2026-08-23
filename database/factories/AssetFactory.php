@@ -30,10 +30,20 @@ class AssetFactory extends Factory
         'Asus', 'Acer', 'BenQ', 'Fujitsu', '',
     ];
 
+    /** Value threshold (PLN) separating low-value (ST_NIS) from high-value (ST_WYS). */
+    public const HIGH_VALUE_THRESHOLD = 10000;
+
+    /** Classify an asset by its unit value into the legacy type codes. */
+    public static function typeForValue(float $value): string
+    {
+        return $value >= self::HIGH_VALUE_THRESHOLD ? 'ST_WYS' : 'ST_NIS';
+    }
+
     /** @return array<string, mixed> */
     public function definition(): array
     {
         $purchase = fake()->dateTimeBetween('-15 years', '-1 month');
+        $value = fake()->randomFloat(2, 10, 25000);
 
         return [
             'inventory_number' => sprintf(
@@ -45,11 +55,11 @@ class AssetFactory extends Factory
             'name' => trim(fake()->randomElement(self::EQUIPMENT).' '.fake()->randomElement(self::BRANDS)),
             'description' => fake()->optional()->sentence(),
             'purchase_doc_number' => 'DOK/'.fake()->numberBetween(2000, 2025).'/'.fake()->numberBetween(1000, 9999),
-            'value' => fake()->randomFloat(2, 10, 25000),
+            'value' => $value,
             'purchase_date' => $purchase,
             'liquidation_date' => null,
             'quantity' => fake()->numberBetween(1, 5),
-            'asset_type' => fake()->randomElement(['ST_NIS', 'WNiP', 'POZ', ' MŚT']),
+            'asset_type' => self::typeForValue($value),
             'location_id' => Location::factory(),
             'inventory_field_id' => InventoryField::factory(),
             'status' => AssetStatus::Available,
