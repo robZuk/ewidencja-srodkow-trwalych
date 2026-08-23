@@ -21,6 +21,7 @@ class DrukController extends Controller
         $transferRequest->load(['asset', 'sourceField', 'targetField', 'requester']);
 
         return Pdf::loadView('pdf.zmu', ['request' => $transferRequest])
+            ->setPaper('a4', 'landscape')
             ->download("ZMU-{$transferRequest->id}.pdf");
     }
 
