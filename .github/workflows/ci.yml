@@ -75,6 +75,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: gd, zip, intl, bcmath, exif, mbstring
+          coverage: none
+
+      # resources/css/app.css imports vendor/livewire/flux/dist/flux.css, so the
+      # Vite build needs Composer packages present.
+      - name: Install PHP dependencies
+        run: composer install --no-dev --no-scripts --no-interaction --no-progress --prefer-dist
+
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
