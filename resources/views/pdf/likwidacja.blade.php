@@ -2,45 +2,38 @@
 <html lang="pl">
 <head>
     <meta charset="utf-8">
-    <style>
-        @page { margin: 32px; }
-        * { font-family: DejaVu Sans, sans-serif; }
-        body { font-size: 11px; color: #000; line-height: 1.35; }
-        table { width: 100%; border-collapse: collapse; }
-        td, th { border: 1px solid #000; padding: 6px 8px; vertical-align: top; }
-        td.mid, th.mid { vertical-align: middle; }
-        .title { font-size: 17px; font-weight: bold; letter-spacing: 6px; }
-        .lbl { font-size: 8px; color: #444; }
-        .val { font-weight: bold; }
-        .center { text-align: center; }
-        .sec { background: #e6e6e6; font-weight: bold; text-align: center; letter-spacing: 1px; }
-        .cb { display: inline-block; width: 11px; height: 11px; border: 1px solid #000; text-align: center; line-height: 11px; font-size: 9px; margin: 0 3px; vertical-align: middle; }
-        .line { border-bottom: 1px solid #000; display: inline-block; min-width: 70px; padding: 0 4px; }
-        .cap { font-size: 8px; color: #444; text-align: center; }
-    </style>
+    <style>@page { size: a4 portrait; margin: 32px; }</style>
+    @include('pdf.partials.styles')
 </head>
 <body>
     @php($assetName = $request->asset?->name ?? $request->asset_snapshot['name'] ?? '—')
     @php($assetNo = $request->asset?->inventory_number ?? $request->asset_snapshot['inventory_number'] ?? '—')
     @php($qty = (int) ($request->asset?->quantity ?? 1))
 
-    {{-- LT form --}}
+    {{-- Header --}}
     <table>
         <tr>
-            <td class="mid" style="width: 62%; height: 52px;">
+            <td class="top stamp" style="width: 22%;">
+                <div class="stamp-cap">(pieczęć jednostki)</div>
+            </td>
+            <td class="mid" style="width: 48%;">
                 <div class="title">L I K W I D A C J A</div>
                 <div style="margin-top: 8px;">
                     Środka trwałego <span class="cb">X</span> LT
-                    &nbsp;&nbsp;<span class="title" style="font-size: 15px; letter-spacing: 1px;">NR</span>
+                    &nbsp;&nbsp;<span class="title" style="letter-spacing: 1px;">NR</span>
                     <span class="line val">{{ $request->zmu_number ?? $request->id }}</span>
                 </div>
                 <div style="margin-top: 5px;">Przedmiotu nietrwałego <span class="cb">&nbsp;</span> LN</div>
             </td>
-            <td class="mid" style="width: 38%;">
+            <td class="mid" style="width: 30%;">
                 <div>Komórka organizacyjna</div>
                 <div style="margin-top: 16px;">Symbol kosztów</div>
             </td>
         </tr>
+    </table>
+
+    {{-- Subject --}}
+    <table style="border-top: none;">
         <tr>
             <th style="width: 62%;">Nazwa środka trwałego – przedmiotu nietrwałego</th>
             <th style="width: 38%;">Nr(y) inwentarzowe(y)</th>
@@ -98,10 +91,10 @@
 
     <table>
         <tr>
-            <th style="width: 46%;">Treść</th>
-            <th style="width: 16%;">Konto Winien</th>
-            <th style="width: 22%;">Kwota</th>
-            <th style="width: 16%;">Konto Ma</th>
+            <th class="mid center" style="width: 46%;">Treść</th>
+            <th class="mid center" style="width: 16%;">Konto Winien</th>
+            <th class="mid center" style="width: 22%;">Kwota</th>
+            <th class="mid center" style="width: 16%;">Konto Ma</th>
         </tr>
         @for ($i = 0; $i < 5; $i++)
             <tr style="height: 24px;"><td></td><td></td><td></td><td></td></tr>
