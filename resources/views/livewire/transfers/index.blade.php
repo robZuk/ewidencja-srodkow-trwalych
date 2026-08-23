@@ -116,7 +116,8 @@ new #[Layout('components.layouts.app', ['title' => 'Powiadomienia'])] class exte
                                     size="xs"
                                     variant="subtle"
                                     icon="eye"
-                                >Szczegóły</flux:button>
+                                    title="Szczegóły"
+                                />
                                 @if ($canAct)
                                     <flux:button wire:click="accept({{ $request->id }})" size="xs" variant="primary" icon="check">Akceptuj</flux:button>
                                     <flux:button wire:click="reject({{ $request->id }})" wire:confirm="Odrzucić zgłoszenie?" size="xs" variant="subtle" icon="x-mark" />
