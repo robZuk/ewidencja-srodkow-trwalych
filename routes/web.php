@@ -72,6 +72,11 @@ Route::middleware('auth')->group(function () {
         Route::get('przejmij-sesje/{user}', [ImpersonationController::class, 'start'])->name('impersonate.start');
     });
 
+    // System-wide change history — admins only.
+    Route::middleware('can:view activity log')->group(function () {
+        Volt::route('historia-zmian', 'activity-log.index')->name('activity-log.index');
+    });
+
     // Ending impersonation must be reachable as the impersonated user (any role).
     Route::get('zakoncz-przejecie', [ImpersonationController::class, 'stop'])->name('impersonate.stop');
 });

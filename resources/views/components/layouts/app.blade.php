@@ -68,7 +68,7 @@
                     </x-nav-link>
                 @endcan
 
-                @canany(['view inventory fields', 'view users'])
+                @canany(['view inventory fields', 'view users', 'view activity log'])
                     <div class="mt-4 px-3 text-xs font-semibold uppercase tracking-wider text-zinc-400">Administracja</div>
                     @can('view inventory fields')
                         <x-nav-link :href="route('inventory-fields.index')" :active="request()->routeIs('inventory-fields.index') || request()->routeIs('inventory-fields.create') || request()->routeIs('inventory-fields.edit')" icon="rectangle-stack">
@@ -78,6 +78,11 @@
                     @can('view users')
                         <x-nav-link :href="route('users.index')" :active="request()->routeIs('users.*')" icon="users">
                             Użytkownicy
+                        </x-nav-link>
+                    @endcan
+                    @can('view activity log')
+                        <x-nav-link :href="route('activity-log.index')" :active="request()->routeIs('activity-log.*')" icon="clock">
+                            Historia zmian
                         </x-nav-link>
                     @endcan
                 @endcanany

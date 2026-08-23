@@ -21,6 +21,7 @@ class RolePermissionSeeder extends Seeder
         'manage users',             // user administration + impersonation (admin only)
         'view inventory fields',    // read the full list of pola spisowe
         'manage inventory fields',  // create/edit/delete pola spisowe (admin only)
+        'view activity log',        // system-wide change history (admin only)
     ];
 
     /** @var array<string, list<string>> */
