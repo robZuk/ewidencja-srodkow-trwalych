@@ -1,7 +1,6 @@
 <?php
 
 use App\Models\Asset;
-use App\Models\InventoryField;
 use App\Models\TransferRequest;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
@@ -39,35 +38,4 @@ it('redirects away from the edit form when the asset is locked', function () {
 
     Volt::test('assets.form', ['asset' => $asset])
         ->assertRedirect(route('assets.index'));
-});
-
-it('starts a transfer from the asset edit form and locks the asset', function () {
-    $target = InventoryField::factory()->create();
-    $asset = Asset::factory()->create();
-
-    actingAs($this->editor);
-
-    Volt::test('assets.form', ['asset' => $asset])
-        ->set('targetFieldId', $target->id)
-        ->set('transferNote', 'Do nowej jednostki')
-        ->call('requestTransfer')
-        ->assertHasNoErrors()
-        ->assertRedirect(route('transfers.index'));
-
-    expect(TransferRequest::where('asset_id', $asset->id)->count())->toBe(1)
-        ->and($asset->refresh()->isLockedForEditing())->toBeTrue();
-});
-
-it('starts a liquidation from the asset edit form', function () {
-    $asset = Asset::factory()->create();
-
-    actingAs($this->editor);
-
-    Volt::test('assets.form', ['asset' => $asset])
-        ->set('liquidationNote', 'Sprzęt uszkodzony')
-        ->call('requestLiquidation')
-        ->assertHasNoErrors()
-        ->assertRedirect(route('transfers.index'));
-
-    expect($asset->refresh()->isLockedForEditing())->toBeTrue();
 });

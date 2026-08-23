@@ -1,13 +1,10 @@
 <?php
 
-use App\Actions\Transfers\RequestLiquidation;
-use App\Actions\Transfers\RequestTransfer;
 use App\Enums\AssetStatus;
 use App\Livewire\Forms\AssetForm;
 use App\Models\Asset;
 use App\Models\InventoryField;
 use App\Models\Location;
-use App\Models\TransferRequest;
 use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
 
@@ -16,13 +13,6 @@ new #[Layout('components.layouts.app', ['title' => 'Środek'])] class extends Co
     public AssetForm $form;
 
     public bool $editing = false;
-
-    // "Operacje na środku" panel (edit screen only).
-    public ?int $targetFieldId = null;
-
-    public string $transferNote = '';
-
-    public string $liquidationNote = '';
 
     public function mount(?Asset $asset = null): void
     {
@@ -53,53 +43,6 @@ new #[Layout('components.layouts.app', ['title' => 'Środek'])] class extends Co
         }
 
         $this->redirectRoute('assets.index', navigate: true);
-    }
-
-    /** Start a transfer of this asset to another inventory field. */
-    public function requestTransfer(RequestTransfer $action): void
-    {
-        $this->authorize('create', TransferRequest::class);
-
-        $asset = $this->form->asset;
-        abort_if($asset === null, 404);
-
-        $this->validate([
-            'targetFieldId' => ['required', 'exists:inventory_fields,id'],
-        ], attributes: ['targetFieldId' => 'pole docelowe']);
-
-        if ((int) $this->targetFieldId === (int) $asset->inventory_field_id) {
-            $this->addError('targetFieldId', 'Pole docelowe musi być inne niż obecne pole środka.');
-
-            return;
-        }
-
-        $action->handle(
-            $asset,
-            InventoryField::findOrFail($this->targetFieldId),
-            auth()->user(),
-            $this->transferNote !== '' ? $this->transferNote : null,
-        );
-
-        session()->flash('status', 'Utworzono przekazanie — środek oczekuje na akceptację.');
-        $this->redirectRoute('transfers.index', navigate: true);
-    }
-
-    /** Start a liquidation request for this asset. */
-    public function requestLiquidation(RequestLiquidation $action): void
-    {
-        $this->authorize('create', TransferRequest::class);
-
-        $asset = $this->form->asset;
-        abort_if($asset === null, 404);
-
-        $action->handle(
-            $asset,
-            auth()->user(),
-            $this->liquidationNote !== '' ? $this->liquidationNote : null,
-        );
-
-        session()->flash('status', 'Utworzono wniosek o likwidację — środek oczekuje na akceptację.');
-        $this->redirectRoute('transfers.index', navigate: true);
     }
 
     /** @return array<string, mixed> */
@@ -163,52 +106,4 @@ new #[Layout('components.layouts.app', ['title' => 'Środek'])] class extends Co
             <flux:button :href="route('assets.index')" variant="ghost" wire:navigate>Anuluj</flux:button>
         </div>
     </form>
-
-    {{-- Operations on an existing asset: start a transfer or a liquidation. --}}
-    @if ($editing)
-        @can('create', App\Models\TransferRequest::class)
-            <div class="mt-8">
-                <flux:heading size="lg">Operacje na środku</flux:heading>
-                <flux:subheading class="mb-4">Rozpocznij przekazanie do innego pola spisowego lub wniosek o likwidację. Po utworzeniu środek zostanie zablokowany do czasu rozpatrzenia.</flux:subheading>
-
-                <div class="grid gap-4 lg:grid-cols-2">
-                    {{-- Transfer --}}
-                    <div class="flex flex-col gap-3 rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-950">
-                        <div class="flex items-center gap-2 font-medium">
-                            <flux:icon.arrow-right-circle variant="micro" /> Przekaż do innego pola
-                        </div>
-                        <flux:select wire:model="targetFieldId" label="Pole docelowe">
-                            <flux:select.option value="">— wybierz —</flux:select.option>
-                            @foreach ($fields as $field)
-                                @if ($field->id !== $form->inventory_field_id)
-                                    <flux:select.option value="{{ $field->id }}">{{ $field->label() }}</flux:select.option>
-                                @endif
-                            @endforeach
-                        </flux:select>
-                        <flux:input wire:model="transferNote" label="Notatka" placeholder="opcjonalnie" />
-                        <flux:button wire:click="requestTransfer" variant="primary" icon="paper-airplane" class="self-start">
-                            Utwórz przekazanie
-                        </flux:button>
-                    </div>
-
-                    {{-- Liquidation --}}
-                    <div class="flex flex-col gap-3 rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-950">
-                        <div class="flex items-center gap-2 font-medium">
-                            <flux:icon.trash variant="micro" /> Zgłoś do likwidacji
-                        </div>
-                        <flux:textarea wire:model="liquidationNote" label="Uzasadnienie" rows="2" placeholder="np. sprzęt uszkodzony" />
-                        <flux:button
-                            wire:click="requestLiquidation"
-                            wire:confirm="Utworzyć wniosek o likwidację tego środka?"
-                            variant="danger"
-                            icon="trash"
-                            class="self-start"
-                        >
-                            Wniosek o likwidację
-                        </flux:button>
-                    </div>
-                </div>
-            </div>
-        @endcan
-    @endif
 </div>
