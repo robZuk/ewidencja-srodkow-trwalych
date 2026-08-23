@@ -54,7 +54,7 @@ new #[Layout('components.layouts.app', ['title' => 'Powiadomienia'])] class exte
     }
 }; ?>
 
-<div class="space-y-6">
+<div class="space-y-6" x-data="{ details: null }">
     <div>
         <flux:heading size="xl">Powiadomienia</flux:heading>
         <flux:subheading>Zgłoszenia przekazań i likwidacji do akceptacji. Nowe zgłoszenie rozpoczniesz z poziomu edycji środka.</flux:subheading>
@@ -99,12 +99,27 @@ new #[Layout('components.layouts.app', ['title' => 'Powiadomienia'])] class exte
                                 $request->status === App\Enums\TransferStatus::Pending ? 'acceptTarget' : 'acceptInventory',
                                 $request,
                             ))
+                            @php($detail = [
+                                'type' => $request->type->label(),
+                                'status' => $request->status->label(),
+                                'asset' => $request->asset?->name ?? $request->asset_snapshot['name'] ?? '—',
+                                'inventory_number' => $request->asset?->inventory_number ?? $request->asset_snapshot['inventory_number'] ?? '',
+                                'source' => $request->sourceField?->label() ?? '—',
+                                'target' => $request->targetField?->label() ?? '—',
+                                'requester' => $request->requester?->name ?? '—',
+                                'date' => $request->created_at?->format('Y-m-d H:i') ?? '',
+                                'note' => $request->note ?: '—',
+                            ])
                             <div class="flex items-center justify-end gap-1">
+                                <flux:button
+                                    x-on:click="details = {{ \Illuminate\Support\Js::from($detail) }}; window.Flux.modal('request-details').show()"
+                                    size="xs"
+                                    variant="subtle"
+                                    icon="eye"
+                                >Szczegóły</flux:button>
                                 @if ($canAct)
                                     <flux:button wire:click="accept({{ $request->id }})" size="xs" variant="primary" icon="check">Akceptuj</flux:button>
                                     <flux:button wire:click="reject({{ $request->id }})" wire:confirm="Odrzucić zgłoszenie?" size="xs" variant="subtle" icon="x-mark" />
-                                @else
-                                    <span class="text-xs text-zinc-400">—</span>
                                 @endif
                             </div>
                         </td>
@@ -119,4 +134,39 @@ new #[Layout('components.layouts.app', ['title' => 'Powiadomienia'])] class exte
     </div>
 
     <div>{{ $requests->links() }}</div>
+
+    <flux:modal name="request-details" class="max-w-lg">
+        <div class="space-y-4">
+            <flux:heading size="lg">Szczegóły zgłoszenia</flux:heading>
+
+            <dl class="grid grid-cols-3 gap-x-4 gap-y-3 text-sm">
+                <dt class="text-zinc-500">Typ</dt>
+                <dd class="col-span-2" x-text="details?.type"></dd>
+
+                <dt class="text-zinc-500">Status</dt>
+                <dd class="col-span-2" x-text="details?.status"></dd>
+
+                <dt class="text-zinc-500">Środek</dt>
+                <dd class="col-span-2">
+                    <span x-text="details?.asset"></span>
+                    <span class="ml-1 font-mono text-xs text-zinc-500" x-text="details?.inventory_number"></span>
+                </dd>
+
+                <dt class="text-zinc-500">Pole źródłowe</dt>
+                <dd class="col-span-2" x-text="details?.source"></dd>
+
+                <dt class="text-zinc-500">Pole docelowe</dt>
+                <dd class="col-span-2" x-text="details?.target"></dd>
+
+                <dt class="text-zinc-500">Zgłaszający</dt>
+                <dd class="col-span-2" x-text="details?.requester"></dd>
+
+                <dt class="text-zinc-500">Data zgłoszenia</dt>
+                <dd class="col-span-2" x-text="details?.date"></dd>
+
+                <dt class="text-zinc-500">Notatka</dt>
+                <dd class="col-span-2" x-text="details?.note"></dd>
+            </dl>
+        </div>
+    </flux:modal>
 </div>
