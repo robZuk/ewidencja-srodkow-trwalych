@@ -253,14 +253,16 @@ new #[Layout('components.layouts.app', ['title' => 'Środki'])] class extends Co
                                         <flux:badge color="amber" size="sm" icon="lock-closed">W akceptacji</flux:badge>
                                     @else
                                         <flux:button :href="route('assets.edit', $asset)" size="xs" variant="subtle" icon="pencil-square" title="Edytuj" wire:navigate />
-                                        <flux:button
-                                            wire:click="delete({{ $asset->id }})"
-                                            wire:confirm="Czy na pewno usunąć ten środek?"
-                                            size="xs"
-                                            variant="subtle"
-                                            icon="trash"
-                                            title="Usuń"
-                                        />
+                                        @can('delete', $asset)
+                                            <flux:button
+                                                wire:click="delete({{ $asset->id }})"
+                                                wire:confirm="Czy na pewno usunąć ten środek?"
+                                                size="xs"
+                                                variant="subtle"
+                                                icon="trash"
+                                                title="Usuń"
+                                            />
+                                        @endcan
                                     @endif
                                 @endcan
                             </div>

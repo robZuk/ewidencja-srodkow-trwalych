@@ -29,8 +29,9 @@ class AssetPolicy
         return $user->can('manage assets') && ! $asset->isLockedForEditing();
     }
 
+    /** Only administrators may delete assets, and only when not mid-approval. */
     public function delete(User $user, Asset $asset): bool
     {
-        return $user->can('manage assets') && ! $asset->isLockedForEditing();
+        return $user->hasRole('admin') && ! $asset->isLockedForEditing();
     }
 }

@@ -90,6 +90,14 @@ it('forbids a viewer from creating an asset', function () {
     Volt::test('assets.form')->assertForbidden();
 });
 
+it('allows only an admin to delete an asset', function () {
+    $asset = Asset::factory()->create();
+    $admin = User::factory()->create()->assignRole('admin');
+
+    expect(editor()->can('delete', $asset))->toBeFalse()
+        ->and($admin->can('delete', $asset))->toBeTrue();
+});
+
 it('starts a transfer straight from the assets list', function () {
     $target = InventoryField::factory()->create();
     $asset = Asset::factory()->create();
