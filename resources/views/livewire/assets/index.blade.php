@@ -69,7 +69,7 @@ new #[Layout('components.layouts.app', ['title' => 'Środki'])] class extends Co
 
         $asset->delete();
 
-        session()->flash('status', "Środek „{$asset->name}” został usunięty.");
+        $this->dispatch('notify', message: "Środek „{$asset->name}” został usunięty.");
     }
 
     public function requestTransfer(RequestTransfer $action): void
@@ -99,6 +99,7 @@ new #[Layout('components.layouts.app', ['title' => 'Środki'])] class extends Co
 
         $this->dispatch('close-asset-ops');
         $this->dispatch('requests-updated');
+        $this->dispatch('notify', message: 'Utworzono przekazanie — środek oczekuje na akceptację.');
     }
 
     public function requestLiquidation(RequestLiquidation $action): void
@@ -117,6 +118,7 @@ new #[Layout('components.layouts.app', ['title' => 'Środki'])] class extends Co
 
         $this->dispatch('close-asset-ops');
         $this->dispatch('requests-updated');
+        $this->dispatch('notify', message: 'Utworzono wniosek o likwidację — środek oczekuje na akceptację.');
     }
 
     /** @return array<string, mixed> */

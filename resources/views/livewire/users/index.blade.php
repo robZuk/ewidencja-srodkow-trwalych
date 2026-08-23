@@ -30,7 +30,7 @@ new #[Layout('components.layouts.app', ['title' => 'Użytkownicy'])] class exten
 
         $user->delete();
 
-        session()->flash('status', "Użytkownik „{$user->name}” został usunięty.");
+        $this->dispatch('notify', message: "Użytkownik „{$user->name}” został usunięty.");
     }
 
     public function roleLabel(?string $role): string

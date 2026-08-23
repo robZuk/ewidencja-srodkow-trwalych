@@ -29,7 +29,7 @@ new #[Layout('components.layouts.app', ['title' => 'Powiadomienia'])] class exte
         }
 
         $this->dispatch('requests-updated');
-        session()->flash('status', 'Zgłoszenie zostało zaakceptowane.');
+        $this->dispatch('notify', message: 'Zgłoszenie zostało zaakceptowane.');
     }
 
     public function reject(TransferRequest $request, RejectRequest $rejectRequest): void
@@ -39,7 +39,7 @@ new #[Layout('components.layouts.app', ['title' => 'Powiadomienia'])] class exte
         $rejectRequest->handle($request, auth()->user());
 
         $this->dispatch('requests-updated');
-        session()->flash('status', 'Zgłoszenie zostało odrzucone.');
+        $this->dispatch('notify', message: 'Zgłoszenie zostało odrzucone.');
     }
 
     /** @return array<string, mixed> */

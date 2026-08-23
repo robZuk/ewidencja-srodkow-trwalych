@@ -112,18 +112,41 @@
             </header>
 
             <main class="flex-1 p-4 lg:p-8">
-                @if (session('status'))
-                    <div class="mb-4 rounded-lg bg-green-50 px-4 py-3 text-sm text-green-800 dark:bg-green-950 dark:text-green-200">
-                        {{ session('status') }}
-                    </div>
-                @endif
-
                 {{ $slot }}
             </main>
         </div>
     </div>
 
-    <flux:toast position="top right" />
+    {{-- Auto-dismissing toast: shows session flashes (after redirects) and
+         "notify" events dispatched by in-place Livewire actions. --}}
+    <div
+        x-data="{
+            show: false,
+            message: '',
+            timer: null,
+            notify(text) {
+                if (! text) return;
+                this.message = text;
+                this.show = true;
+                clearTimeout(this.timer);
+                this.timer = setTimeout(() => this.show = false, 4000);
+            },
+        }"
+        x-init="
+            notify(@js(session('status')));
+            window.addEventListener('notify', (e) => notify(e.detail?.message ?? e.detail?.[0]?.message));
+        "
+        x-show="show"
+        x-cloak
+        x-transition.opacity.duration.300ms
+        class="fixed bottom-6 right-6 z-50 max-w-sm rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm text-zinc-800 shadow-lg dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
+    >
+        <div class="flex items-center gap-2">
+            <flux:icon.check-circle variant="micro" class="text-green-500" />
+            <span x-text="message"></span>
+        </div>
+    </div>
+
     @fluxScripts
 </body>
 </html>

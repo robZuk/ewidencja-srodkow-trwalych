@@ -30,7 +30,7 @@ new #[Layout('components.layouts.app', ['title' => 'Pola Spisowe'])] class exten
         $inventoryField->members()->detach();
         $inventoryField->delete();
 
-        session()->flash('status', "Pole spisowe „{$inventoryField->name}” zostało usunięte.");
+        $this->dispatch('notify', message: "Pole spisowe „{$inventoryField->name}” zostało usunięte.");
     }
 
     /** @return array<string, mixed> */
