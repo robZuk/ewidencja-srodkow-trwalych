@@ -10,7 +10,7 @@ class UserPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->can('manage users');
+        return $user->can('view users');
     }
 
     public function create(User $user): bool

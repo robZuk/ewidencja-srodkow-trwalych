@@ -20,11 +20,25 @@ it('lists users for an admin', function () {
     Volt::test('users.index')->assertSee('Jan Kowalski');
 });
 
-it('forbids a non-admin from user administration', function () {
-    actingAs(User::factory()->create()->assignRole('editor'));
+it('lets the inventory section view the user list', function () {
+    User::factory()->create(['name' => 'Anna Nowak'])->assignRole('editor');
+
+    actingAs(User::factory()->create()->assignRole('inventory_section'));
+
+    Volt::test('users.index')->assertSee('Anna Nowak');
+});
+
+it('forbids editors and viewers from the user list', function (string $role) {
+    actingAs(User::factory()->create()->assignRole($role));
 
     Volt::test('users.index')->assertForbidden();
-});
+})->with(['editor', 'viewer']);
+
+it('forbids non-admins from the user form', function (string $role) {
+    actingAs(User::factory()->create()->assignRole($role));
+
+    Volt::test('users.form')->assertForbidden();
+})->with(['editor', 'inventory_section', 'viewer']);
 
 it('creates a user with a role', function () {
     actingAs($this->admin);

@@ -60,9 +60,13 @@ Route::middleware('auth')->group(function () {
         Volt::route('pola-spisowe/{inventoryField}/edytuj', 'inventory-fields.form')->name('inventory-fields.edit');
     });
 
-    // User administration.
-    Route::middleware('can:manage users')->group(function () {
+    // User list — admins and the inventory section (read-only for the latter).
+    Route::middleware('can:view users')->group(function () {
         Volt::route('uzytkownicy', 'users.index')->name('users.index');
+    });
+
+    // User administration (create/edit + impersonation) — admins only.
+    Route::middleware('can:manage users')->group(function () {
         Volt::route('uzytkownicy/nowy', 'users.form')->name('users.create');
         Volt::route('uzytkownicy/{user}/edytuj', 'users.form')->name('users.edit');
         Route::get('przejmij-sesje/{user}', [ImpersonationController::class, 'start'])->name('impersonate.start');

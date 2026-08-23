@@ -60,9 +60,11 @@ new #[Layout('components.layouts.app', ['title' => 'Użytkownicy'])] class exten
 <div>
     <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
         <flux:heading size="xl">Użytkownicy</flux:heading>
-        <flux:button :href="route('users.create')" variant="primary" icon="user-plus" wire:navigate>
-            Dodaj użytkownika
-        </flux:button>
+        @can('create', App\Models\User::class)
+            <flux:button :href="route('users.create')" variant="primary" icon="user-plus" wire:navigate>
+                Dodaj użytkownika
+            </flux:button>
+        @endcan
     </div>
 
     <flux:input wire:model.live.debounce.300ms="search" icon="magnifying-glass" placeholder="Szukaj: imię lub e-mail…" class="mb-4 max-w-md" />
@@ -94,10 +96,17 @@ new #[Layout('components.layouts.app', ['title' => 'Użytkownicy'])] class exten
                                         Przejmij sesję
                                     </flux:button>
                                 @endcan
-                                <flux:button :href="route('users.edit', $user)" size="xs" variant="subtle" icon="pencil-square" wire:navigate />
+                                @can('update', $user)
+                                    <flux:button :href="route('users.edit', $user)" size="xs" variant="subtle" icon="pencil-square" wire:navigate />
+                                @endcan
                                 @can('delete', $user)
                                     <flux:button wire:click="delete({{ $user->id }})" wire:confirm="Usunąć tego użytkownika?" size="xs" variant="subtle" icon="trash" />
                                 @endcan
+                                @cannot('update', $user)
+                                    @cannot('impersonate', $user)
+                                        <span class="text-xs text-zinc-400">—</span>
+                                    @endcannot
+                                @endcannot
                             </div>
                         </td>
                     </tr>

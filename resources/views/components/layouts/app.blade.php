@@ -68,14 +68,14 @@
                     </x-nav-link>
                 @endcan
 
-                @canany(['view inventory fields', 'manage users'])
+                @canany(['view inventory fields', 'view users'])
                     <div class="mt-4 px-3 text-xs font-semibold uppercase tracking-wider text-zinc-400">Administracja</div>
                     @can('view inventory fields')
                         <x-nav-link :href="route('inventory-fields.index')" :active="request()->routeIs('inventory-fields.index') || request()->routeIs('inventory-fields.create') || request()->routeIs('inventory-fields.edit')" icon="rectangle-stack">
                             Pola Spisowe
                         </x-nav-link>
                     @endcan
-                    @can('manage users')
+                    @can('view users')
                         <x-nav-link :href="route('users.index')" :active="request()->routeIs('users.*')" icon="users">
                             Użytkownicy
                         </x-nav-link>
