@@ -15,7 +15,7 @@
             <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-600 text-white">
                 <flux:icon.archive-box variant="micro" />
             </div>
-            <span class="text-xl font-semibold tracking-tight text-zinc-800 dark:text-zinc-100">Asset Inventory</span>
+            <span class="text-xl font-semibold tracking-tight text-zinc-800 dark:text-zinc-100">{{ config('app.name') }}</span>
         </div>
 
         <div class="rounded-2xl border border-zinc-200 bg-white p-8 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">

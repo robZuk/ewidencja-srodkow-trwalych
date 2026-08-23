@@ -1,4 +1,4 @@
-@props(['title' => 'Asset Inventory'])
+@props(['title' => 'Ewidencja Środków Trwałych'])
 
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full">
@@ -31,7 +31,7 @@
                 <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-white">
                     <flux:icon.archive-box variant="micro" />
                 </div>
-                <span class="text-lg font-semibold tracking-tight">Asset Inventory</span>
+                <span class="text-base font-semibold leading-tight tracking-tight">{{ config('app.name') }}</span>
             </div>
 
             <nav class="flex flex-col gap-1 p-4 text-sm">
