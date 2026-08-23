@@ -13,6 +13,23 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class AssetFactory extends Factory
 {
+    /** @var list<string> real-world Polish fixed-asset names */
+    public const EQUIPMENT = [
+        'Laptop', 'Komputer stacjonarny', 'Monitor', 'Drukarka laserowa', 'Skaner',
+        'Projektor multimedialny', 'Biurko', 'Krzesło biurowe', 'Szafa aktowa',
+        'Regał magazynowy', 'Telefon systemowy', 'Router', 'Przełącznik sieciowy',
+        'Serwer', 'Zasilacz UPS', 'Niszczarka dokumentów', 'Kserokopiarka',
+        'Tablica interaktywna', 'Ekran projekcyjny', 'Klimatyzator', 'Aparat fotograficzny',
+        'Kamera cyfrowa', 'Mikroskop', 'Waga laboratoryjna', 'Wirówka laboratoryjna',
+        'Oscyloskop', 'Drukarka 3D', 'Zestaw komputerowy', 'Dysk sieciowy NAS', 'Tablet',
+    ];
+
+    /** @var list<string> */
+    public const BRANDS = [
+        'Dell', 'HP', 'Lenovo', 'Samsung', 'LG', 'Epson', 'Canon', 'Brother',
+        'Asus', 'Acer', 'BenQ', 'Fujitsu', '',
+    ];
+
     /** @return array<string, mixed> */
     public function definition(): array
     {
@@ -25,7 +42,7 @@ class AssetFactory extends Factory
                 fake()->numberBetween(1, 999),
                 fake()->numberBetween(1, 99),
             ),
-            'name' => ucfirst(fake()->words(fake()->numberBetween(1, 3), true)),
+            'name' => trim(fake()->randomElement(self::EQUIPMENT).' '.fake()->randomElement(self::BRANDS)),
             'description' => fake()->optional()->sentence(),
             'purchase_doc_number' => 'DOK/'.fake()->numberBetween(2000, 2025).'/'.fake()->numberBetween(1000, 9999),
             'value' => fake()->randomFloat(2, 10, 25000),
