@@ -68,6 +68,12 @@ class Asset extends Model
         ];
     }
 
+    /** Per-item value (total value / quantity) used to classify the asset type. */
+    public function unitValue(): float
+    {
+        return (float) $this->value / max(1, $this->quantity);
+    }
+
     // -- Relations -----------------------------------------------------------
 
     /** @return BelongsTo<InventoryField, $this> */
