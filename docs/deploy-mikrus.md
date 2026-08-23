@@ -32,16 +32,16 @@ systemctl restart docker
 
 ## 3. Kod na serwer
 
-Docelowa ścieżka: `/srv/asset-inventory`.
+Docelowa ścieżka: `/srv/ewidencja-srodkow-trwalych`.
 
 ```bash
 mkdir -p /srv && cd /srv
-git clone <repo-url> asset-inventory      # gdy repo trafi na GitHub
-cd asset-inventory
+git clone https://github.com/robZuk/ewidencja-srodkow-trwalych.git
+cd ewidencja-srodkow-trwalych
 ```
 
 Bez zdalnego repozytorium można wgrać kod przez `rsync`/`scp` do
-`/srv/asset-inventory`.
+`/srv/ewidencja-srodkow-trwalych`.
 
 ## 4. Port TCP
 
@@ -121,7 +121,7 @@ docker compose --env-file .env.prod -f docker-compose.prod.yml up -d
 ## 10. Redeploy
 
 ```bash
-cd /srv/asset-inventory
+cd /srv/ewidencja-srodkow-trwalych
 git pull
 docker compose --env-file .env.prod -f docker-compose.prod.yml up -d --build
 ```

@@ -21,6 +21,10 @@ jobs:
     permissions:
       contents: read
       packages: write
+    # Job-level env so it's available in the deploy step's `if` (step-level env
+    # is not visible to that same step's condition).
+    env:
+      MIKRUS_HOST: ${{ secrets.MIKRUS_HOST }}
 
     steps:
       - uses: actions/checkout@v4
@@ -54,8 +58,6 @@ jobs:
       # build still validates on every push).
       - name: Deploy to Mikr.us (SSH)
         if: ${{ env.MIKRUS_HOST != '' }}
-        env:
-          MIKRUS_HOST: ${{ secrets.MIKRUS_HOST }}
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.MIKRUS_HOST }}
@@ -63,7 +65,7 @@ jobs:
           username: ${{ secrets.MIKRUS_USER }}
           key: ${{ secrets.MIKRUS_SSH_KEY }}
           script: |
-            cd /srv/asset-inventory
+            cd /srv/ewidencja-srodkow-trwalych
             git pull --ff-only
             export APP_IMAGE=${{ steps.img.outputs.image }}:latest
             docker compose --env-file .env.prod -f docker-compose.prod.yml pull
