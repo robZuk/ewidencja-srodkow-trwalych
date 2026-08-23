@@ -11,3 +11,17 @@
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
+
+/*
+ * Tailwind v4 dropped the default `cursor: pointer` on buttons; restore it for
+ * interactive elements (buttons, links styled as buttons, selects, summaries).
+ */
+@layer base {
+    button:not(:disabled),
+    [role='button']:not(:disabled),
+    summary,
+    label[for],
+    select:not(:disabled) {
+        cursor: pointer;
+    }
+}
