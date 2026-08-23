@@ -13,10 +13,10 @@
     {{-- Header --}}
     <table>
         <tr>
-            <td class="top stamp" style="width: 22%;">
+            <td class="top stamp" style="width: 32%;">
                 <div class="stamp-cap">(pieczęć jednostki)</div>
             </td>
-            <td class="mid" style="width: 48%;">
+            <td class="mid" style="width: 68%;">
                 <div class="title">L I K W I D A C J A</div>
                 <div style="margin-top: 8px;">
                     Środka trwałego <span class="cb">X</span> LT
@@ -24,10 +24,6 @@
                     <span class="line val">{{ $request->zmu_number ?? $request->id }}</span>
                 </div>
                 <div style="margin-top: 5px;">Przedmiotu nietrwałego <span class="cb">&nbsp;</span> LN</div>
-            </td>
-            <td class="mid" style="width: 30%;">
-                <div>Komórka organizacyjna</div>
-                <div style="margin-top: 16px;">Symbol kosztów</div>
             </td>
         </tr>
     </table>
