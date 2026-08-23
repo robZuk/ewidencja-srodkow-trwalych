@@ -94,8 +94,6 @@
                     <flux:icon.bars-3 variant="outline" />
                 </button>
 
-                <h1 class="truncate text-base font-semibold">{{ $title }}</h1>
-
                 <div class="ml-auto flex items-center gap-3">
                     <span class="hidden text-sm text-zinc-500 sm:block">
                         {{ auth()->user()?->name }}
