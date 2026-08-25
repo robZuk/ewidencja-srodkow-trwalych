@@ -149,9 +149,19 @@ itd.). Zweryfikowana end-to-end na rzeczywistym zrzucie ~20 000 środków.
 
 ## Zrzuty ekranu
 
-Ekrany: logowanie, lista środków (wyszukiwanie/filtr/sortowanie po typie i
-statusie), formularz środka, tablica powiadomień/akceptacji oraz *druki* ZMU i
-likwidacji. Wrzuć zrzuty do `docs/screenshots/`, aby wyświetlić je tutaj.
+Interfejs po polsku, tryb ciemny.
+
+**Lista środków** — wyszukiwarka, filtry (status / pole spisowe / typ), sortowanie kolumn, eksport CSV/Excel:
+
+![Lista środków](docs/screenshots/lista-srodkow.png)
+
+| Powiadomienia — akceptacja transferów i likwidacji | Historia zmian — dziennik audytu (append-only) |
+|:--:|:--:|
+| ![Powiadomienia](docs/screenshots/powiadomienia.png) | ![Historia zmian](docs/screenshots/historia-zmian.png) |
+| **Pola spisowe** — jednostki organizacyjne | **Użytkownicy** — role i przejęcie sesji |
+| ![Pola spisowe](docs/screenshots/pola-spisowe.png) | ![Użytkownicy](docs/screenshots/uzytkownicy.png) |
+| **Druki ZMU** — generowanie dokumentów PDF | **Logowanie** |
+| ![Druki ZMU](docs/screenshots/druki-zmu.png) | ![Logowanie](docs/screenshots/logowanie.png) |
 
 ## Wdrożenie
 
