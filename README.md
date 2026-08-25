@@ -149,11 +149,13 @@ itd.). Zweryfikowana end-to-end na rzeczywistym zrzucie ~20 000 środków.
 
 ## Zrzuty ekranu
 
-Interfejs po polsku, tryb ciemny.
+Interfejs po polsku, z przełącznikiem trybu jasny / ciemny.
 
 **Lista środków** — wyszukiwarka, filtry (status / pole spisowe / typ), sortowanie kolumn, eksport CSV/Excel:
 
-![Lista środków](docs/screenshots/lista-srodkow.png)
+| Tryb ciemny | Tryb jasny |
+|:--:|:--:|
+| ![Lista środków — tryb ciemny](docs/screenshots/lista-srodkow.png) | ![Lista środków — tryb jasny](docs/screenshots/lista-srodkow-jasny.png) |
 
 | Powiadomienia — akceptacja transferów i likwidacji | Historia zmian — dziennik audytu (append-only) |
 |:--:|:--:|
