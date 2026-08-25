@@ -1,46 +1,53 @@
-# Deployment
+# Wdrożenie
 
-The app is a Laravel 13 + **PostgreSQL 16** application, served in production by
-**FrankenPHP** in a Docker container. The supported target is a **Mikr.us VPS** —
-see the step-by-step runbook:
+Aplikacja to Laravel 13 + **PostgreSQL 16**, serwowana na produkcji przez
+**FrankenPHP** w kontenerze Docker. Wspieranym celem jest **VPS Mikr.us** — patrz
+krok po kroku:
 
 ➡️ **[docs/deploy-mikrus.md](deploy-mikrus.md)**
 
-## In short
+## W skrócie
 
-Production runs as a self-contained Docker Compose stack
+Produkcja działa jako samowystarczalny stack Docker Compose
 (`docker-compose.prod.yml`):
 
-- **app** — `docker/Dockerfile.prod` (FrankenPHP serving `public/` on `:8080`,
-  HTTP; TLS is terminated at the Mikr.us edge).
-- **db** — `postgres:16-alpine` on an internal-only network, data in the `pgdata`
-  volume.
+- **app** — `docker/Dockerfile.prod` (FrankenPHP serwuje `public/` na `:8080`,
+  HTTP; TLS terminowany na brzegu Mikr.us).
+- **db** — `postgres:16-alpine` w sieci wyłącznie wewnętrznej, dane w wolumenie
+  `pgdata`.
 
-Config/secrets come from `.env.prod` (copy `.env.prod.example`), used both for
-compose interpolation (`--env-file .env.prod`) and injected into the containers
-(`env_file`). There is no `.env` file baked into the image.
+Konfiguracja/sekrety pochodzą z `.env.prod` (kopia `.env.prod.example`), używanego
+zarówno do interpolacji compose (`--env-file .env.prod`), jak i wstrzykiwanego do
+kontenerów (`env_file`). W obrazie nie ma pliku `.env`.
 
-On container start the entrypoint (`docker/entrypoint.prod.sh`) runs
-`migrate --force`, seeds roles (`RolePermissionSeeder`, idempotent), and warms
-`config:cache` + `view:cache` (no `route:cache` — the `logout` route is a
-closure), then starts FrankenPHP.
+Przy starcie kontenera entrypoint (`docker/entrypoint.prod.sh`) wykonuje
+`migrate --force`, seeduje role (`RolePermissionSeeder`, idempotentnie) i rozgrzewa
+`config:cache` + `view:cache` (bez `route:cache` — trasa `logout` to closure), po
+czym uruchamia FrankenPHP.
 
 ```bash
-# first deploy / redeploy on the server
+# pierwszy deploy / redeploy na serwerze
 docker compose --env-file .env.prod -f docker-compose.prod.yml up -d --build
 ```
 
-## Other hosts
+## CI/CD
 
-Any Docker-capable host works with the same `docker-compose.prod.yml`. Adjust
-`WEB_PORT`, point `DB_HOST` at your database, and terminate TLS at your proxy /
-load balancer. A pre-built image can be published to a registry via
-`.github/workflows/deploy.yml` (GHCR) — inactive until the repo is on GitHub with
-the `MIKRUS_*` secrets set.
+Push do `main` uruchamia GitHub Actions (`.github/workflows/deploy.yml`): testy →
+build obrazu → push do **GHCR** → deploy po SSH na serwer (`git pull` +
+`docker compose pull` + `up -d`). Krok deploy wykonuje się tylko przy zielonym CI
+i gdy ustawione są sekrety `MIKRUS_*`. Szczegóły w
+[docs/deploy-mikrus.md](deploy-mikrus.md).
 
-## Notes
+## Inne hosty
 
-- Generate a fresh `APP_KEY` for production; never reuse the development key from
-  `.env.docker`.
-- No public demo account is seeded in production. Create an admin manually
-  (see the runbook, step 7). `DemoSeeder` remains available if you want a demo.
+Każdy host z Dockerem zadziała z tym samym `docker-compose.prod.yml`. Dostosuj
+`WEB_PORT`, wskaż `DB_HOST` na swoją bazę i terminuj TLS na swoim proxy / load
+balancerze.
+
+## Uwagi
+
+- Wygeneruj świeży `APP_KEY` dla produkcji; nigdy nie używaj klucza deweloperskiego
+  z `.env.docker`.
+- Entrypoint **nie** seeduje danych demo — konto admina tworzysz ręcznie (patrz
+  runbook, krok 7). `DemoSeeder` można odpalić ręcznie, jeśli chcesz dane demo (tak
+  zrobiono na wersji demo pod publicznym adresem).

@@ -1,68 +1,71 @@
-# Architecture & design decisions
+# Architektura i decyzje projektowe
 
-This document explains how the application is structured and why — in particular how
-it improves on the legacy system it was rebuilt from.
+Ten dokument wyjaśnia, jak zbudowana jest aplikacja i dlaczego — w szczególności
+czym poprawia stary system, z którego została odtworzona.
 
-## Layers
+## Warstwy
 
 ```
-Livewire/Volt component  →  Form object / Action  →  Eloquent model  →  DB
-                         →  Policy (authorization)
+Komponent Livewire/Volt  →  obiekt Form / akcja  →  model Eloquent  →  DB
+                         →  Policy (autoryzacja)
                          →  Observer (audit)
 ```
 
-- **Components stay thin.** Volt single-file components handle UI state and delegate
-  domain work to Action classes or Form objects. No raw SQL, no business rules in the
-  view layer.
-- **Actions encapsulate operations.** Each workflow step is its own class in
+- **Komponenty pozostają cienkie.** Komponenty single-file Volt obsługują stan UI
+  i delegują pracę domenową do klas akcji lub obiektów Form. Żadnego surowego SQL-a
+  ani reguł biznesowych w warstwie widoku.
+- **Akcje enkapsulują operacje.** Każdy krok obiegu to osobna klasa w
   `App\Actions\Transfers` (`RequestTransfer`, `AcceptTransfer`, `AcceptLiquidation`,
-  `RejectRequest`, …). They are unit-testable in isolation and injected into components.
-- **Form objects** (`App\Livewire\Forms\AssetForm`) own validation rules and the
-  create/update mapping, keeping the component small.
-- **Query scopes** on `Asset` (`search`, `forField`, `withStatus`) replace ad-hoc
-  `where()` chains and are reused by the list and the exporter.
-- **Enums** (`AssetStatus`, `TransferType`, `TransferStatus`) replace magic strings and
-  carry their own Polish labels and colours plus the workflow's `isOpen()` logic.
-- **Authorization** is policy-based (`AssetPolicy`, `TransferRequestPolicy`) on top of
-  spatie/laravel-permission roles and permissions.
-- **Auditing** is handled by `AssetObserver`, writing an append-only `asset_activities`
-  log.
+  `RejectRequest`, …). Są testowalne w izolacji i wstrzykiwane do komponentów.
+- **Obiekty Form** (`App\Livewire\Forms\AssetForm`) trzymają reguły walidacji oraz
+  mapowanie create/update, dzięki czemu komponent jest mały.
+- **Query scopes** na `Asset` (`search`, `forField`, `withStatus`) zastępują doraźne
+  łańcuchy `where()` i są współdzielone przez listę oraz eksporter.
+- **Enumy** (`AssetStatus`, `TransferType`, `TransferStatus`) zastępują magiczne
+  stringi i niosą własne polskie etykiety, kolory oraz logikę `isOpen()` obiegu.
+- **Autoryzacja** opiera się na politykach (`AssetPolicy`, `TransferRequestPolicy`)
+  na bazie ról i uprawnień spatie/laravel-permission.
+- **Audyt** obsługuje `AssetObserver`, zapisując dziennik `asset_activities` w trybie
+  append-only.
 
-## The transfer / liquidation state machine
+## Maszyna stanów transferu / likwidacji
 
 `TransferStatus`:
 
 ```
 Transfer:    Pending ──▶ PendingInventory ──▶ Completed
                     └─────────┬───────────────▶ Rejected
-Liquidation: PendingInventory ──▶ Completed
+Likwidacja:  PendingInventory ──▶ Completed
                     └───────────▶ Rejected
 ```
 
-Transitions live in the Action classes; asset side effects (moving an asset to the
-target field, or marking it liquidated with a date) run inside a DB transaction.
+Przejścia żyją w klasach akcji; efekty uboczne na środku (przeniesienie do pola
+docelowego albo oznaczenie jako zlikwidowany wraz z datą) wykonują się w transakcji
+bazodanowej.
 
-**Separation of duties.** The two acceptance steps are performed by different roles:
-step 1 (`acceptTarget`) is authorized only for a **member of the target field**
-(`inventory_field_user` pivot) — the recipient who accepts the incoming asset — while
-step 2 (`acceptInventory`) is reserved for the **inventory section**. An asset is also
-**locked** (no edit/delete, no second request) while it has any open request.
+**Rozdział obowiązków.** Dwa kroki akceptacji wykonują różne role: krok 1
+(`acceptTarget`) jest dozwolony wyłącznie dla **członka pola docelowego** (pivot
+`inventory_field_user`) — odbiorcy, który akceptuje przychodzący środek — natomiast
+krok 2 (`acceptInventory`) jest zarezerwowany dla **sekcji inwentaryzacji**. Środek
+jest też **zablokowany** (brak edycji/usuwania, brak drugiego wniosku), dopóki ma
+jakikolwiek otwarty wniosek.
 
-## What changed versus the legacy system
+## Co zmieniło się względem starego systemu
 
-| Legacy | This rebuild | Why |
+| Stary system | Ta reimplementacja | Dlaczego |
 |---|---|---|
-| `roles` table reused as "pola spisowe"; magic role IDs `999998/999999` | dedicated `inventory_fields` table; named roles via spatie | clarity, referential integrity, real RBAC |
-| `zasoby.id` = concatenated string PK | auto-increment PK + `unique(inventory_number, inventory_field_id)` | correctness, simpler relations |
-| Fat controllers (800–1100 lines) with raw `DB::` queries | thin components + Actions + scopes | testability, separation of concerns |
-| Audit logic inside model `boot()` | dedicated `AssetObserver` | single responsibility |
-| Base migrations git-ignored; deploy by copying the DB | full migrations + factories + seeders | reproducible from a clean clone |
-| Institution/LDAP specifics hard-coded | removed; generic auth + optional legacy import | portability |
+| tabela `roles` użyta jako „pola spisowe"; magiczne ID ról `999998/999999` | dedykowana tabela `inventory_fields`; nazwane role przez spatie | czytelność, integralność referencyjna, prawdziwe RBAC |
+| `zasoby.id` = sklejony string jako PK | PK auto-increment + `unique(inventory_number, inventory_field_id)` | poprawność, prostsze relacje |
+| grube kontrolery (800–1100 linii) z surowymi zapytaniami `DB::` | cienkie komponenty + akcje + scopes | testowalność, rozdział odpowiedzialności |
+| logika audytu w `boot()` modelu | dedykowany `AssetObserver` | pojedyncza odpowiedzialność |
+| migracje bazowe w gitignore; deploy przez kopiowanie bazy | pełne migracje + fabryki + seedery | odtwarzalność od czystego klona |
+| specyfika instytucji/LDAP zaszyta w kodzie | usunięta; generyczny auth + opcjonalny import ze starego systemu | przenośność |
 
-## Testing strategy
+## Strategia testów
 
-- **Unit** — enums and Action logic.
-- **Feature** — Volt component interactions (`Livewire::test`), HTTP endpoints,
-  authorization matrices (data-driven), the importer (against a synthetic in-memory
-  legacy DB), and PDF/export responses.
-- Everything runs on SQLite in-memory for speed; the same gate runs in CI.
+- **Jednostkowe** — logika enumów i akcji.
+- **Feature** — interakcje komponentów Volt (`Livewire::test`), endpointy HTTP,
+  macierze autoryzacji (data-driven), importer (na syntetycznej, in-memory bazie
+  legacy) oraz odpowiedzi PDF/eksportu.
+- Lokalnie wszystko biega na SQLite in-memory dla szybkości; w CI ta sama bramka
+  uruchamiana jest na PostgreSQL (silniku produkcyjnym).
