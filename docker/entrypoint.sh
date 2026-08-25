@@ -31,7 +31,7 @@ if ! grep -q '^APP_KEY=base64:' .env; then
     php artisan key:generate --force
 fi
 
-# 4. Wait for MySQL to accept a real PDO connection.
+# 4. Wait for the database to accept a real PDO connection.
 log "waiting for database..."
 until php artisan tinker --execute="DB::connection()->getPdo();" >/dev/null 2>&1; do
     sleep 2
