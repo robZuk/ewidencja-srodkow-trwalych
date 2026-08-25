@@ -1,4 +1,4 @@
-# Optional CD pipeline (mirror of the planista7 setup). Inactive until:
+# Optional CD pipeline. Inactive until:
 #   1. the repo is pushed to GitHub, and
 #   2. the MIKRUS_* secrets are set (Settings → Secrets and variables → Actions).
 # Until then, deploy manually per docs/deploy-mikrus.md.
@@ -15,8 +15,14 @@ on:
   workflow_dispatch:
 
 jobs:
+  # Quality gate: same reusable workflow as ci.yml. build-push-deploy has
+  # `needs: test`, so nothing is built or deployed unless the tests pass.
+  test:
+    uses: ./.github/workflows/tests.yml
+
   build-push-deploy:
     name: Build image, push to GHCR, deploy
+    needs: test
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -27,7 +33,7 @@ jobs:
       MIKRUS_HOST: ${{ secrets.MIKRUS_HOST }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Compute lowercase image name
         id: img
