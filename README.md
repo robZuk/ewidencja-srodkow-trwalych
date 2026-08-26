@@ -1,19 +1,15 @@
 # Ewidencja Środków Trwałych
 
-> System ewidencji środków trwałych z obiegiem wniosków dla instytucji — środki
-> trwałe, pola spisowe, trzystopniowy obieg akceptacji transferu i likwidacji,
-> historia zmian (audit trail), wydruki PDF oraz eksport CSV/Excel.
+> Aplikacja webowa do zarządzania majątkiem trwałym w instytucji: prowadzi rejestr
+> środków, a przeniesienia i likwidacje przechodzą przez formalny obieg akceptacji.
+> W zestawie: pola spisowe, trzystopniowy obieg wniosków, historia zmian (audit
+> trail), wydruki PDF oraz eksport CSV/Excel.
 
 Zbudowany na **Laravel 13 · Livewire 4 · Volt · Flux · Tailwind v4**, testowany
 **Pestem**, analizowany statycznie **Larastanem**, uruchamiany jednym
 `docker compose up`.
 
-> Domena to odtworzenie rzeczywistej aplikacji do zarządzania majątkiem; ta wersja
-> to czysta, portfolio'wa reimplementacja ze znormalizowanym schematem, warstwą
-> akcji/serwisów, autoryzacją opartą na politykach i pełnym pokryciem testami.
-> Interfejs jest po polsku (język domeny); kod i commity po angielsku.
-
-**🔗 Demo na żywo: [srodkitrwale.tojest.dev](https://srodkitrwale.tojest.dev)** — zaloguj się jako `demo@example.com` / `password` (konto tylko do odczytu).
+**🔗 Demo na żywo: [srodkitrwale.tojest.dev](https://srodkitrwale.tojest.dev)** — zaloguj się jako `admin@example.com` / `password` (pełny dostęp).
 
 [![CI](https://github.com/robZuk/ewidencja-srodkow-trwalych/actions/workflows/ci.yml/badge.svg)](https://github.com/robZuk/ewidencja-srodkow-trwalych/actions/workflows/ci.yml)
 [![Deploy](https://github.com/robZuk/ewidencja-srodkow-trwalych/actions/workflows/deploy.yml/badge.svg)](https://github.com/robZuk/ewidencja-srodkow-trwalych/actions/workflows/deploy.yml)
@@ -31,16 +27,14 @@ Zbudowany na **Laravel 13 · Livewire 4 · Volt · Flux · Tailwind v4**, testow
 - **Obieg likwidacji** — wniosek → akceptacja inwentaryzacji → środek oznaczony
   jako zlikwidowany.
 - **Historia zmian (audit trail)** — każda zmiana środka zapisywana przez obserwator
-  (append-only), zamiast efektów ubocznych w `boot()` modelu ze starej wersji.
+  (append-only).
 - **Dostęp oparty na rolach** — `admin`, `editor`, `inventory_section`, `viewer`
-  (spatie/laravel-permission) egzekwowane przez polityki + konto **demo** tylko do odczytu.
+  (spatie/laravel-permission) egzekwowane przez polityki.
 - **Administracja użytkownikami i przejęcie sesji** — admin zarządza kontami i rolami
   oraz może przejąć sesję użytkownika („przejęcie sesji") z trwałym bannerem i
   wyjściem jednym kliknięciem.
 - **Dokumenty i eksport** — druki **PDF** ZMU i likwidacji (dompdf) oraz eksport
   **CSV** i **Excel** uwzględniający aktywne filtry listy.
-- **Importer danych ze starego systemu** — idempotentna, porcjowana komenda artisan
-  migrująca rzeczywiste dane ze starego schematu bazy do nowego.
 
 ## Stack technologiczny
 
@@ -69,18 +63,6 @@ Modele Eloquent + query scopes          search()/forField()/withStatus(), enumy
         └─ AssetObserver                audit trail (tylko dopisywanie)
 Cienkie kontrolery                      wyłącznie endpointy plikowe (PDF, CSV/XLSX)
 ```
-
-Kluczowe decyzje i różnice względem starego systemu opisano w
-[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
-
-## Model domenowy
-
-- **Asset** (`assets`) — PK auto-increment, `unique(inventory_number, inventory_field_id)`,
-  soft delete, enum `status` (`available` / `transferred` / `liquidated`).
-- **InventoryField** (`inventory_fields`) — *pola spisowe* (osobna, pełnoprawna
-  tabela, a nie nadużyta tabela `roles` ze starego schematu).
-- **Location** (`locations`), **TransferRequest** (`transfer_requests`, z enumami
-  `type` i `status`), **AssetActivity** (`asset_activities`, dziennik zmian).
 
 ## Uruchomienie lokalne
 
@@ -125,28 +107,6 @@ PostgreSQL** (silnik produkcyjny) obok Pinta, Larastana i produkcyjnego buildu
 assetów przy każdym pushu i pull requeście. **Deploy jest zależny od zielonego
 CI** (`needs: test`).
 
-## Import danych ze starego systemu
-
-Aplikacja dostarcza wygenerowane dane demo. Aby zaimportować dane ze **starej**
-bazy, skieruj połączenie `legacy` na nią i uruchom importer:
-
-```dotenv
-# .env
-LEGACY_DB_HOST=...
-LEGACY_DB_DATABASE=eki
-LEGACY_DB_USERNAME=...
-LEGACY_DB_PASSWORD=...
-```
-
-```bash
-docker compose exec app php artisan app:import-legacy --dry-run   # podgląd liczb
-docker compose exec app php artisan app:import-legacy --fresh     # import (najpierw truncate)
-```
-
-Komenda jest porcjowana i idempotentna, mapuje stary schemat na nowy
-(`roles`→`inventory_fields`, `zasoby`→`assets`, `powiadomienia`→`transfer_requests`
-itd.). Zweryfikowana end-to-end na rzeczywistym zrzucie ~20 000 środków.
-
 ## Zrzuty ekranu
 
 Interfejs po polsku, z przełącznikiem trybu jasny / ciemny.
@@ -176,14 +136,3 @@ SSH — krok deploy wykonuje się tylko przy zielonym CI.
 - **Na żywo:** <https://srodkitrwale.tojest.dev> (VPS Mikr.us)
 - **Infrastruktura i CI/CD (opis):** [`docs/architektura.md`](docs/architektura.md)
 - **Runbook serwera** (pierwszy deploy, redeploy, rollback): [`docs/deploy-mikrus.md`](docs/deploy-mikrus.md)
-
-## Plany (v2)
-
-- Uwierzytelnianie LDAP / SSO
-- Pełna lokalizacja interfejsu PL/EN
-- Operacje masowe na środkach i zapisane filtry
-
-## Uwagi
-
-Projekt portfolio'wy. Dane demo są generowane fabrykami; jakiekolwiek podobieństwo
-do rzeczywistych rekordów jest przypadkowe. Licencja MIT.
